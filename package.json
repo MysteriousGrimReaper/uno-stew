@@ -1,0 +1,26 @@
+{
+  "name": "uno-stew",
+  "version": "1.0.0",
+  "description": "Bot that hosts Uno Stew",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MysteriousGrimReaper/uno-stew.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MysteriousGrimReaper/uno-stew/issues"
+  },
+  "homepage": "https://github.com/MysteriousGrimReaper/uno-stew#readme",
+  "devDependencies": {
+    "eslint": "^8.57.0"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1"
+  }
+}
