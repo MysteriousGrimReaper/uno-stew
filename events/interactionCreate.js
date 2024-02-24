@@ -1,9 +1,5 @@
 const { Events, Collection } = require("discord.js");
-const { getCollector } = require("../commands/study/study.js");
-const { get_hand_collect_reply_fn } = require("../commands/games/unoflip.js");
-const {
-	get_hand_collect_reply_fn_stew,
-} = require("../commands/games/unostew.js");
+const { get_hand_collect_reply_fn_stew } = require("../commands/unostew.js");
 module.exports = {
 	name: Events.InteractionCreate,
 	async execute(interaction) {
@@ -54,27 +50,6 @@ module.exports = {
 				});
 			}
 		} else if (interaction.isButton()) {
-			const collector = getCollector();
-			if (collector && interaction.customId == `study_quit`) {
-				if (collector.userId != interaction.user.id) {
-					interaction.reply({
-						ephemeral: true,
-						content: `You can't close this study session, you're not the one studying!`,
-					});
-					return;
-				}
-				collector.on(`end`, (collected) => {
-					interaction.reply(
-						`Study finished! You answered ${collected.size} questions.`
-					);
-					collector.userId = false;
-				});
-				collector.stop();
-			}
-			const hand_collect_reply_fn = get_hand_collect_reply_fn();
-			if (hand_collect_reply_fn) {
-				await hand_collect_reply_fn(interaction);
-			}
 			const hand_collect_reply_fn_stew = get_hand_collect_reply_fn_stew();
 			if (hand_collect_reply_fn_stew) {
 				await hand_collect_reply_fn_stew(interaction);

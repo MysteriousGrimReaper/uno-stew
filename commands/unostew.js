@@ -2,7 +2,7 @@
 /* eslint-disable no-case-declarations */
 const fs = require("fs");
 const path = require("path");
-const dir = `../`;
+const dir = `C:/Users/A/Documents/GitHub/uno-stew/uno-stew`;
 const signup_path = path.join(dir, `/tools/signup.js`);
 const stew_path = path.join(dir, `/game-lists/stew`);
 const { create_signup } = require(signup_path);
@@ -244,7 +244,7 @@ module.exports = {
 				async function end_turn() {
 					if (drawpile.check_match()) {
 						await game_channel.send(
-							`${uno_players.current_user} has escaped the stew!`
+							`${uno_players.current_user} has escaped the kitchen!`
 						);
 						uno_players.add_winner(
 							`${uno_players.current_user.id}`

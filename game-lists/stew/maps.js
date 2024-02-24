@@ -37,6 +37,7 @@ special_emoji_map.set("m", "🍆");
 special_emoji_map.set("p", "🎂");
 special_emoji_map.set("o", "🥕");
 special_emoji_map.set("s", "🥛");
+exports.special_emoji_map = special_emoji_map;
 exports.emoji_map = emoji_map;
 icon_map.set("sk", "Skip");
 icon_map.set("+2", "Draw 2");

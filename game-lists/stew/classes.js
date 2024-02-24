@@ -1,8 +1,8 @@
 const path = require("path");
-const { dir } = require("./dir.json");
-const amalgam_path = path.join(dir, `/game-lists/amalgam`);
+const dir = `C:/Users/A/Documents/GitHub/uno-stew/uno-stew`;
+const stew_path = path.join(dir, `/game-lists/stew`);
 const { color_map, icon_map, emoji_map, special_emoji_map } = require(path.join(
-	amalgam_path,
+	stew_path,
 	`/maps.js`
 ));
 function shuffle(array) {

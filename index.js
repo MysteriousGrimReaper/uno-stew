@@ -54,8 +54,7 @@ for (const file of eventFiles) {
 		client.on(event.name, (...args) => event.execute(...args));
 	}
 }
-const test = true;
-client.login(test ? testToken : token);
+client.login(token);
 /*
 const yourUserId = "1014413186017021952";
 
