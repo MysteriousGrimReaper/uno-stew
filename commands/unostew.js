@@ -2,12 +2,13 @@
 /* eslint-disable no-case-declarations */
 const fs = require("fs");
 const path = require("path");
-const { dir } = require("../config.json");
+const dir = `../`;
 const signup_path = path.join(dir, `/tools/signup.js`);
 const stew_path = path.join(dir, `/game-lists/stew`);
-const { create_signup } = require(`../tools/signup.js`);
+const { create_signup } = require(signup_path);
 const { deck } = require(path.join(stew_path, `/cards.json`));
-const effects_path = path.join(stew_path, `effects`);
+const effects_path = path.join(stew_path, `/effects`);
+console.log(deck);
 const effect_folder = fs.readdirSync(effects_path);
 const effect_list = [];
 for (const effect_file of effect_folder) {
