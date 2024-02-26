@@ -120,7 +120,7 @@ module.exports = {
 				}
 				await i.update({
 					components: [dance_row],
-					content: `Dance be upon ye, ${dancer.user}! Finish the dance ${timeTag}, or draw 3 cards:\n${dance_routine[move_index]}`,
+					content: `Dance be upon ye, ${dancer.user}! Finish the dance ${timeTag}, or draw 3 cards:\n${dance_routine[move_index]}\n(${move_index}/${dance_routine.length})`,
 				});
 			} else {
 				await uno_players.game_channel.send(

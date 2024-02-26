@@ -1,14 +1,16 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 /* eslint-disable no-case-declarations */
+const DEBUG_DECK = true;
 const fs = require("fs");
 const path = require("path");
 const dir = `C:/Users/A/Documents/GitHub/uno-stew/uno-stew`;
 const signup_path = path.join(dir, `/tools/signup.js`);
 const stew_path = path.join(dir, `/game-lists/stew`);
 const { create_signup } = require(signup_path);
-const { deck } = require(path.join(stew_path, `/cards.json`));
+const { deck } = require(DEBUG_DECK
+	? path.join(stew_path, `/cards.json`)
+	: path.join(stew_path, `/default_cards.json`));
 const effects_path = path.join(stew_path, `/effects`);
-console.log(deck);
 const effect_folder = fs.readdirSync(effects_path);
 const effect_list = [];
 for (const effect_file of effect_folder) {
@@ -16,7 +18,9 @@ for (const effect_file of effect_folder) {
 	const effect = require(filePath);
 	effect_list.push(effect);
 }
-
+/**
+ * List of all effect names.
+ */
 const effect_names = effect_list.map((eff) => eff.name);
 const {
 	SlashCommandBuilder,
@@ -159,7 +163,9 @@ module.exports = {
 						break;
 					case `unostew_players`:
 						await i.reply({
-							content: `Here are the hands and statuses of all players:\n${uno_players
+							content: `Current player: ${
+								uno_players.current_user.username
+							}\nHere are the hands and statuses of all players:\n${uno_players
 								.map(
 									(p) =>
 										`## ${p.user.username}\n${p.hand.back_text}`
@@ -177,6 +183,7 @@ module.exports = {
 				1,
 				Math.ceil(Math.random() * 4)
 			);
+			// update this to be an embed
 			await game_channel.send({
 				content: `The first cards are:\n${drawpile.discard_pile_text(
 					currently_inactive_discard_pile
@@ -202,8 +209,6 @@ module.exports = {
 								`**UNO!!** ${player.user} has one card left!`
 							);
 						}
-						break;
-					case `uno callout`:
 						const uno_callout_player = uno_players.find(
 							(p) => p.hand.length == 1 && p.uno_callable
 						);
@@ -224,17 +229,26 @@ module.exports = {
 				const sum_flag = args.find((argument) =>
 					/^sum$/.test(argument)
 				);
-				const card_color = args.find((argument) =>
-					color_keys.includes(argument)
-				);
+				const card_color =
+					color_values.find((i) => {
+						return message.content.toLowerCase() == i.toLowerCase();
+					}) ??
+					args.find((argument) => color_keys.includes(argument));
 				const pile_indicator =
 					args.find((argument) => /^p[1-4]$/.test(argument)) ??
 					(currently_inactive_discard_pile == 1 ? `p2` : `p1`);
 				const card_icon =
-					args.find((argument) => icon_keys.includes(argument)) ??
+					icon_values.find((i) => {
+						return message.content.toLowerCase() == i.toLowerCase();
+					}) ?? args.find((argument) => icon_keys.includes(argument));
+				const card_chosen = player.hand.check_for_card(
+					`${card_color} ${card_icon}`
+				);
+				console.log(
 					icon_values.find((i) => {
 						message.content.toLowerCase().includes(i.toLowerCase());
-					});
+					})
+				);
 				const debug_ids = [
 					`315495597874610178`,
 					`1014413186017021952`,
@@ -323,9 +337,6 @@ module.exports = {
 					return;
 				}
 
-				const card_chosen = player.hand.check_for_card(
-					`${card_color} ${card_icon}`
-				);
 				// effect processing
 				const process_effects = async (symbol) => {
 					uno_players.input_state = true;
@@ -359,86 +370,94 @@ module.exports = {
 					}
 					player.play(card_chosen, pile_chosen);
 					await game_channel.send(
-						`${player.user.username} jumped in with a **${
-							card_chosen.text
-						}**!${
-							current_player_flag
-								? `\n**Patience bonus!** You can play an any other card on the same pile.`
-								: ``
-						}`
+						`${player.user.username} jumped in with a **${card_chosen.text}**!`
 					);
-					// GO TO HERE IF YOU GET LOST
-					const patience_promise = new Promise((resolve) => {
-						uno_players.input_state = true;
-						const r_filter = (m) => m.author.id === player.user.id; // Only collect messages from the author of the command
-						const collector =
-							uno_players.game_channel.createMessageCollector({
-								filter: r_filter,
-								time: 60000,
-							});
-						collector.on("collect", async (collectedMessage) => {
-							if (collectedMessage.content == `stop`) {
-								collector.stop();
-								resolve();
-								return;
-							}
-							const r_args = collectedMessage.content.split(` `);
-							const r_card_color = r_args.find((argument) =>
-								color_keys.includes(argument)
-							);
-							const r_card_icon =
-								r_args.find((argument) =>
-									icon_keys.includes(argument)
-								) ??
-								icon_values.find((i) => {
-									collectedMessage.content
-										.toLowerCase()
-										.includes(i.toLowerCase());
-								});
-							const new_card_chosen = player.hand.check_for_card(
-								`${r_card_color} ${r_card_icon}`
-							);
-							if (!new_card_chosen) {
-								return;
-							}
-							player.play(new_card_chosen, pile_chosen);
-							await uno_players.game_channel.send({
-								content: `${player.user.username} played a **${
-									new_card_chosen.front.text
-								}** on pile ${
-									uno_players.drawpile.discardpiles.indexOf(
-										pile_chosen
-									) + 1
-								}.`,
-							});
-							collector.stop();
-							resolve();
-						});
-
-						collector.on("end", async (collected) => {
-							uno_players.input_state = false;
-							if (collected.size === 0) {
-								uno_players.game_channel.send(
-									"You timed out, playing a random card..."
-								);
-								player.play(player.hand[0], pile_chosen);
-								await uno_players.game_channel.send({
-									content: `${
-										player.user.username
-									} played a **${
-										player.hand[0].text
-									}** on pile ${
-										uno_players.drawpile.discardpiles.indexOf(
-											pile_chosen
-										) + 1
-									}.`,
-								});
-								collector.stop();
-								resolve();
-							}
-						});
-					});
 					if (current_player_flag) {
+						await game_channel.send(
+							`**Patience bonus!** You can play **any** other card on the same pile.`
+						);
+						const patience_promise = new Promise((resolve) => {
+							uno_players.input_state = true;
+							const r_filter = (m) =>
+								m.author.id === player.user.id; // Only collect messages from the author of the command
+							const collector =
+								uno_players.game_channel.createMessageCollector(
+									{
+										filter: r_filter,
+										time: 60000,
+									}
+								);
+							collector.on(
+								"collect",
+								async (collectedMessage) => {
+									if (collectedMessage.content == `stop`) {
+										collector.stop();
+										resolve();
+										return;
+									}
+									const r_args =
+										collectedMessage.content.split(` `);
+									const r_card_color = r_args.find(
+										(argument) =>
+											color_keys.includes(argument)
+									);
+									const r_card_icon =
+										r_args.find((argument) =>
+											icon_keys.includes(argument)
+										) ??
+										icon_values.find((i) => {
+											collectedMessage.content
+												.toLowerCase()
+												.includes(i.toLowerCase());
+										});
+									const new_card_chosen =
+										player.hand.check_for_card(
+											`${r_card_color} ${r_card_icon}`
+										);
+									if (!new_card_chosen) {
+										return;
+									}
+									player.play(new_card_chosen, pile_chosen);
+									await uno_players.game_channel.send({
+										content: `${
+											player.user.username
+										} played a **${
+											new_card_chosen.front.text
+										}** on pile ${
+											uno_players.drawpile.discardpiles.indexOf(
+												pile_chosen
+											) + 1
+										}.`,
+									});
+									collector.stop();
+									resolve();
+								}
+							);
+
+							collector.on("end", async (collected) => {
+								uno_players.input_state = false;
+								if (collected.size === 0) {
+									uno_players.game_channel.send(
+										"You timed out, playing a random card..."
+									);
+
+									await uno_players.game_channel.send({
+										content: `${
+											player.user.username
+										} played a **${
+											player.hand[0].text
+										}** on pile ${
+											uno_players.drawpile.discardpiles.indexOf(
+												pile_chosen
+											) + 1
+										}.`,
+									});
+									player.play(player.hand[0], pile_chosen);
+									collector.stop();
+									resolve();
+								}
+							});
+						});
 						await patience_promise;
 					}
 					// HOUSE RULE - jump-ins' symbols and modifiers activate
@@ -483,6 +502,7 @@ module.exports = {
 							player.hand[player.hand.length - 1].text
 						}**.`
 					);
+					await game_channel.send(`${player.user} drew a card.`);
 					await end_turn();
 					return;
 				}

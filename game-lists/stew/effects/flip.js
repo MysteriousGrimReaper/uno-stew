@@ -1,5 +1,5 @@
 module.exports = {
-	name: `f`,
+	name: `fl`,
 	async effect({ uno_players }) {
 		uno_players.forEach((p) => {
 			p.hand.flip();

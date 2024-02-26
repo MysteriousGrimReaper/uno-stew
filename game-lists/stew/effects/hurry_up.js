@@ -3,6 +3,9 @@ const SECONDS = 7;
 module.exports = {
 	name: `hu`,
 	async effect({ uno_players }) {
+		await uno_players.game_channel.send(
+			`**Hurry Up!** You have 7 seconds to place your cards.`
+		);
 		let current_turn_index = uno_players.current_turn_index;
 		let seconds_elapsed = 0;
 		const player_checker = setInterval(() => {

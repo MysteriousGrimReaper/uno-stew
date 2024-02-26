@@ -32,14 +32,6 @@ module.exports = {
 					time: 60000,
 				});
 			button_collector.on(`collect`, async (i) => {
-				const { user } = i;
-				if (user.id != player.user.id) {
-					await i.reply({
-						ephemeral: true,
-						content: `It's not your turn.`,
-					});
-					return;
-				}
 				await i.reply({
 					ephemeral: true,
 					content: `${
@@ -48,6 +40,13 @@ module.exports = {
 							: `You have no playable cards left in your hand, type \`stop\` to exit.`
 					}`,
 				});
+			});
+			button_collector.on(`ignore`, async (i) => {
+				await i.reply({
+					ephemeral: true,
+					content: `It's not your turn.`,
+				});
+				return;
 			});
 			button_collector.on(`end`, async () => {
 				await cards_message.edit({

@@ -1,6 +1,16 @@
 module.exports = {
 	name: `th`,
 	async effect({ uno_players, player }) {
+		if (uno_players.length == 2) {
+			await uno_players.game_channel.send(
+				`You traded hands with your opponent.`
+			);
+			[uno_players[0].hand, uno_players[1].hand] = [
+				uno_players[1].hand,
+				uno_players[0].hand,
+			];
+			return;
+		}
 		await uno_players.game_channel.send(
 			`${player.user}, type the name of a player to trade with them.`
 		);
@@ -34,7 +44,7 @@ module.exports = {
 					uno_players.game_channel.send(
 						"You timed out. Trading with a another player..."
 					);
-					const target_player = uno_players[0];
+					const target_player = uno_players.next_player();
 
 					[target_player.hand, player.hand] = [
 						player.hand,

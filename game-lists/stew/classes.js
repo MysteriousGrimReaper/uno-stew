@@ -62,6 +62,9 @@ class Card {
 	get text() {
 		return this.front.text;
 	}
+	get hand_text() {
+		return this.front.hand_text;
+	}
 	get back_text() {
 		return this.back.text;
 	}
@@ -97,6 +100,7 @@ class CardFace {
 			this.text.toLowerCase(),
 			this.text.toUpperCase(),
 		];
+		this.hand_text = `${this.aliases[3]} (${this.aliases[0]})`;
 	}
 	/**
 	 *
@@ -200,7 +204,7 @@ class Hand extends Array {
 		);
 	}
 	get text() {
-		return `- ${this.map((card) => card.text).join(`\n- `)}`;
+		return `- ${this.map((card) => card.hand_text).join(`\n- `)}`;
 	}
 	get back_text() {
 		return `- ${this.map((card) => card.back_text).join(`\n- `)}`;
@@ -215,6 +219,7 @@ class Hand extends Array {
 class DrawPile extends Array {
 	constructor() {
 		super();
+		this.currently_inactive_discard_pile = 0;
 		this.discardpiles = [];
 	}
 	activate_all_discard_piles() {
