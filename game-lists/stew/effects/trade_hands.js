@@ -1,5 +1,6 @@
 module.exports = {
 	name: `th`,
+	text: `Trade Hands`,
 	async effect({ uno_players, player }) {
 		if (uno_players.length == 2) {
 			await uno_players.game_channel.send(

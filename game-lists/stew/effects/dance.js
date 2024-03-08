@@ -29,6 +29,7 @@ function shuffle(array) {
 const SECONDS = 45;
 module.exports = {
 	name: `da`,
+	text: `Dancing`,
 	async effect({ uno_players, message }) {
 		const dancer = uno_players.next_player();
 		const dance_emojis = [
@@ -124,7 +125,7 @@ module.exports = {
 				});
 			} else {
 				await uno_players.game_channel.send(
-					`${dancer.user} made the wrong move...`
+					`${dancer.user} made the wrong move... (draw 3 cards)`
 				);
 				dancer.draw(uno_players.drawpile, 3);
 				uno_players.step();

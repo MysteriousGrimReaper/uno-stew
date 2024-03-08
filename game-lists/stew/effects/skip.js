@@ -1,5 +1,6 @@
 module.exports = {
 	name: `sk`,
+	text: `Skip`,
 	async effect({ uno_players }) {
 		uno_players.step();
 		await uno_players.game_channel.send(

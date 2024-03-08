@@ -1,5 +1,6 @@
 module.exports = {
-	name: `re`,
+	name: `sh`,
+	text: `Swap Hands`,
 	async effect({ uno_players }) {
 		const first_hand = uno_players[0].hand;
 		uno_players.forEach((x, i) => {

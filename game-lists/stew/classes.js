@@ -47,6 +47,9 @@ class Card {
 	get modifiers() {
 		return this.front.modifiers;
 	}
+	get wild() {
+		return this.front.wild;
+	}
 	set color(c) {
 		this.front.color = c;
 	}
@@ -71,14 +74,17 @@ class Card {
 }
 /**
  * Represents a card's face.
- * @param {string} icon The card number or symbol. Cards with matching icons can be matched together.
- * @param {string} color The card's colour. Cards with matching colors can be matched together.
- * @param {array} modifiers The modifiers(s) that the card has. All modifierss are strings.
+ * @param {String} icon The card number or symbol. Cards with matching icons can be matched together.
+ * @param {String} color The card's colour. Cards with matching colors can be matched together.
+ * @param {Array} modifiers The modifiers(s) that the card has. All modifierss are strings.
  */
 class CardFace {
-	constructor(icon, color, modifiers) {
-		this.icon = icon; // card number or symbol (string)
-		this.color = color; // card colour (string)
+	constructor({ icon, color, modifiers, wild }) {
+		this.modifiers = modifiers ?? []; // what modifiers(s) the card has (array)
+		this.wild = wild;
+		this.wild_colors = this.wild ? [] : [];
+		this.icon = icon ?? ``; // card number or symbol (string)
+		this.color = this.wild ? `Wild` : color; // card colour (string)
 		this.emoji = /^\d+$/.test(icon)
 			? emoji_map.get(this.color)
 			: special_emoji_map.get(this.color);
@@ -90,17 +96,14 @@ class CardFace {
 		// p: pink
 		// o: orange
 		// s: silver (gray)
-		this.modifiers = modifiers ?? []; // what modifiers(s) the card has (array)
+
 		this.aliases = [
 			// all ways to refer to the card
-			`${this.color} ${this.icon}`,
-			`${this.color} ${this.icon}`.toLowerCase(),
-			`${this.color} ${this.icon}`.toUpperCase(),
+			`${this.color}${this.icon}`.toLowerCase(),
 			this.text,
 			this.text.toLowerCase(),
-			this.text.toUpperCase(),
 		];
-		this.hand_text = `${this.aliases[3]} (${this.aliases[0]})`;
+		this.hand_text = `${this.aliases[1]} (${this.aliases[0]})`;
 	}
 	/**
 	 *
@@ -108,7 +111,7 @@ class CardFace {
 	 */
 	get text() {
 		let card_text = ``;
-		const color_name = color_map.get(this.color);
+		const color_name = color_map.get(this.color) ?? this.color;
 		card_text += `${color_name} ` ?? ``;
 		const icon_name = icon_map.get(this.icon) ?? this.icon;
 		card_text += `${icon_name} `;
@@ -199,9 +202,10 @@ class Hand extends Array {
 		return this.splice(index, 1)[0];
 	}
 	check_for_card(card_text) {
-		return this.find((card_in_hand) =>
-			card_in_hand.front.aliases.includes(card_text.toUpperCase())
-		);
+		console.log(`hi`);
+		return this.find((card_in_hand) => {
+			return card_in_hand.front.aliases.includes(card_text.toLowerCase());
+		});
 	}
 	get text() {
 		return `- ${this.map((card) => card.hand_text).join(`\n- `)}`;
@@ -224,13 +228,22 @@ class DrawPile extends Array {
 	}
 	activate_all_discard_piles() {
 		this.discardpiles.forEach((dp) => (dp.active = true));
+		return this;
 	}
 	set_inactive_discard_pile(index) {
 		this.discardpiles[index].active = false;
+		return this;
 	}
 	set_new_inactive_discard_pile(index) {
 		this.activate_all_discard_piles();
 		this.set_inactive_discard_pile(index);
+		return this;
+	}
+	update_discard_pile() {
+		this.set_new_inactive_discard_pile(
+			this.currently_inactive_discard_pile
+		);
+		return this;
 	}
 	least_active_discard_pile() {
 		let i = 0;
@@ -288,15 +301,13 @@ class DrawPile extends Array {
 				.reduce((acc, cv) => (acc == cv ? cv : false)) != false
 		);
 	}
-	discard_pile_text(inactive_pile_index = -1) {
+	get discard_pile_text() {
 		return this.discardpiles
 			.map(
 				(dp, i) =>
-					`- ${i + 1 == inactive_pile_index ? `~~` : ``}Pile ${
-						i + 1
-					}: **${dp.top_card.text}**${
-						i + 1 == inactive_pile_index ? `~~` : ``
-					}`
+					`- ${!dp.active ? `~~` : ``}Dish ${i + 1}: **${
+						dp.top_card.text
+					}**${!dp.active ? `~~` : ``}`
 			)
 			.join(`\n`);
 	}
@@ -313,20 +324,16 @@ class DrawPile extends Array {
 			...card_deck_front.map(
 				(card, index) =>
 					new Card(
-						new CardFace(
-							card.icon,
-							card.color,
-							card.wild,
-							card.wild_colors,
-							card.modifiers
-						),
-						new CardFace(
-							card_deck_back[index].icon,
-							card_deck_back[index].color,
-							card_deck_back[index].wild,
-							card_deck_back[index].wild_colors,
-							card_deck_back[index].modifiers
-						)
+						new CardFace({
+							icon: card.icon,
+							color: card.color,
+							modifiers: card.modifiers,
+						}),
+						new CardFace({
+							icon: card_deck_back[index].icon,
+							color: card_deck_back[index].color,
+							modifiers: card_deck_back[index].modifiers,
+						})
 					)
 			)
 		);
@@ -427,11 +434,9 @@ class PlayerManager extends Array {
 	/**
 	 * Returns the next player.
 	 */
-	next_player(index = 1) {
+	get next_player() {
 		return this[
-			(this.current_turn_index +
-				index * this.play_direction +
-				this.length) %
+			(this.current_turn_index + 1 * this.play_direction + this.length) %
 				this.length
 		];
 	}

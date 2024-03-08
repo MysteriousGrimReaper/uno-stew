@@ -1,6 +1,7 @@
 const { ButtonBuilder, ActionRowBuilder, ButtonStyle } = require("discord.js");
 module.exports = {
 	name: `-rc`,
+	text: `Repeat Colour Discard`,
 	async effect({
 		uno_players,
 		player,
@@ -62,6 +63,7 @@ module.exports = {
 					return;
 				}
 				const args = collectedMessage.content.split(` `);
+
 				const jump_in_flag =
 					args[0] == `j` || args[0] == `jump` ? args[0] : false;
 				const sum_flag = args[0] == `sum`;

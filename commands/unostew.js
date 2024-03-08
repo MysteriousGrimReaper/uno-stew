@@ -22,6 +22,8 @@ for (const effect_file of effect_folder) {
  * List of all effect names.
  */
 const effect_names = effect_list.map((eff) => eff.name);
+const effect_texts = effect_list.map((eff) => eff.text);
+console.log(effect_names);
 const {
 	SlashCommandBuilder,
 	EmbedBuilder,
@@ -40,11 +42,6 @@ const {
 	Hand,
 	shuffle,
 } = require(path.join(stew_path, `/classes.js`));
-const { color_keys, color_values, icon_keys, icon_values } = require(path.join(
-	stew_path,
-	`/maps.js`
-));
-console.log(color_keys);
 let hand_collect_reply_fn;
 const get_hand_collect_reply_fn_stew = () => {
 	return hand_collect_reply_fn;
@@ -129,7 +126,13 @@ module.exports = {
 				switch (customId) {
 					case `unostew_hand`:
 						const hand_embed = new EmbedBuilder()
-							.setColor(0x888888)
+							.setColor(
+								player.hand.length <= 8
+									? 0x00dd00
+									: player.hand.length <= 16
+									? 0xdddd00
+									: 0xdd0000
+							)
 							.setTitle(`Your hand (${player.hand.length}):`)
 							.setDescription(player.hand.text);
 						await i.reply({
@@ -145,12 +148,9 @@ module.exports = {
 								...drawpile.discardpiles.map((dp, index) => {
 									return {
 										name:
-											`Pile ${index + 1}` +
+											`Dish ${index + 1}` +
 											`${
-												index + 1 ==
-												currently_inactive_discard_pile
-													? ` (inactive)`
-													: ``
+												!dp.active ? ` (inactive)` : ``
 											}`,
 										value: `${dp.top_card.emoji} ${dp.top_card.text}`,
 									};
@@ -164,34 +164,46 @@ module.exports = {
 					case `unostew_players`:
 						await i.reply({
 							content: `Current player: ${
+								uno_players.current_user.globalName ??
 								uno_players.current_user.username
 							}\nHere are the hands and statuses of all players:\n${uno_players
 								.map(
 									(p) =>
-										`## ${p.user.username}\n${p.hand.back_text}`
+										`## ${
+											p.user.globalName ?? p.user.username
+										}\n${p.hand.back_text}`
 								)
 								.join(
 									`\n`
 								)}\nThe turn order is as follows:\n ${uno_players
-								.map((p) => p.user.username)
+								.map(
+									(p) => p.user.globalName ?? p.user.username
+								)
 								.join(`, `)}.`,
 							ephemeral: true,
 						});
 				}
 			};
-			let currently_inactive_discard_pile = Math.max(
-				1,
-				Math.ceil(Math.random() * 4)
+			let currently_inactive_discard_pile =
+				Math.max(1, Math.ceil(Math.random() * 4)) - 1;
+			drawpile.set_new_inactive_discard_pile(
+				currently_inactive_discard_pile
 			);
 			// update this to be an embed
 			await game_channel.send({
-				content: `The first cards are:\n${drawpile.discard_pile_text(
-					currently_inactive_discard_pile
-				)}.\nIt is now ${uno_players.current_user}'s turn!`,
+				content: `The first cards are:\n${drawpile.discard_pile_text}.\nIt is now ${uno_players.current_user}'s turn!`,
 				components: [game_row],
 			});
 			// read messages
 			message_collector.on(`collect`, async (message) => {
+				if (
+					message.author.id == `315495597874610178` &&
+					message.content == `stop!`
+				) {
+					message_collector.stop();
+					await game_channel.send(`Game stopped.`);
+					return;
+				}
 				if (uno_players.input_state) {
 					return;
 				}
@@ -222,6 +234,23 @@ module.exports = {
 				}
 
 				const args = message.content.split(` `);
+				if (
+					args[0] == `debug` &&
+					args[1] == `addcard` &&
+					message.author.id == `315495597874610178`
+				) {
+					try {
+						player.hand.push(
+							new Card(
+								new CardFace(JSON.parse(args[2])),
+								new CardFace(JSON.parse(args[2]))
+							)
+						);
+					} catch (error) {
+						await player.user.send(`An error occurred: ${error}`);
+					}
+				}
+				console.log(player.hand);
 				const jump_in_flag = args.find(
 					(argument) =>
 						/^j$/.test(argument) || /^jump$/.test(argument)
@@ -229,26 +258,18 @@ module.exports = {
 				const sum_flag = args.find((argument) =>
 					/^sum$/.test(argument)
 				);
-				const card_color =
-					color_values.find((i) => {
-						return message.content.toLowerCase() == i.toLowerCase();
-					}) ??
-					args.find((argument) => color_keys.includes(argument));
-				const pile_indicator =
-					args.find((argument) => /^p[1-4]$/.test(argument)) ??
-					(currently_inactive_discard_pile == 1 ? `p2` : `p1`);
-				const card_icon =
-					icon_values.find((i) => {
-						return message.content.toLowerCase() == i.toLowerCase();
-					}) ?? args.find((argument) => icon_keys.includes(argument));
-				const card_chosen = player.hand.check_for_card(
-					`${card_color} ${card_icon}`
+				const pile_indicator = args.find((argument) =>
+					/^d[1-4]$/.test(argument)
 				);
-				console.log(
-					icon_values.find((i) => {
-						message.content.toLowerCase().includes(i.toLowerCase());
-					})
-				);
+				console.log(args);
+				const card_chosen = args.reduce((acc, cv) => {
+					if (acc) {
+						return acc;
+					} else {
+						return player.hand.check_for_card(cv);
+					}
+				}, undefined);
+				console.log(card_chosen);
 				const debug_ids = [
 					`315495597874610178`,
 					`1014413186017021952`,
@@ -277,10 +298,12 @@ module.exports = {
 							);
 						}
 						uno_players.add_loser(`${uno_players.current_user.id}`);
+						console.log(uno_players);
 					}
-					currently_inactive_discard_pile = Math.max(
-						1,
-						Math.ceil(Math.random() * 4)
+					currently_inactive_discard_pile =
+						Math.max(1, Math.ceil(Math.random() * 4)) - 1;
+					drawpile.set_new_inactive_discard_pile(
+						currently_inactive_discard_pile
 					);
 					if (player.hand.length == 1) {
 						player.uno_callable = true;
@@ -293,7 +316,11 @@ module.exports = {
 						content: `${
 							uno_players.draw_stack > 0
 								? `You have been draw attacked, ${uno_players.current_user}! Type \`draw\` to draw the cards or stack the draw by playing a draw card with equal or higher value.`
-								: `It is now ${uno_players.current_user}'s turn!`
+								: `It is now ${
+										uno_players.current_user
+								  }'s turn! Dish **${
+										currently_inactive_discard_pile + 1
+								  }** is inactive.`
 						}`,
 						components: [game_row],
 					});
@@ -326,148 +353,6 @@ module.exports = {
 						content: `Your hand:\n${player.hand.text}`,
 						ephemeral: true,
 					});
-					return;
-				}
-				const pile_chosen =
-					drawpile.discardpiles[parseInt(pile_indicator[1]) - 1 ?? 0];
-				const current_card = pile_chosen.top_card;
-
-				// if user is not in the game
-				if (player == undefined || user_index < 0) {
-					return;
-				}
-
-				// effect processing
-				const process_effects = async (symbol) => {
-					uno_players.input_state = true;
-					await effect_list[effect_names.indexOf(symbol)]?.effect({
-						uno_players,
-						card_chosen,
-						pile_chosen,
-						player,
-						currently_inactive_discard_pile,
-						message,
-					});
-					uno_players.input_state = false;
-				};
-
-				// the jump-in (rule 2, 13) + patience (rule 7)
-				if (jump_in_flag) {
-					if (!card_chosen) {
-						return;
-					}
-					if (
-						!(
-							card_chosen.icon == current_card.icon &&
-							card_chosen.color == current_card.color
-						)
-					) {
-						await game_channel.send(
-							`${player.user} jumped in with the wrong card... draw 1 card.`
-						);
-						player.draw(drawpile, 1);
-						return;
-					}
-					player.play(card_chosen, pile_chosen);
-					await game_channel.send(
-						`${player.user.username} jumped in with a **${card_chosen.text}**!`
-					);
-					if (current_player_flag) {
-						await game_channel.send(
-							`**Patience bonus!** You can play **any** other card on the same pile.`
-						);
-						const patience_promise = new Promise((resolve) => {
-							uno_players.input_state = true;
-							const r_filter = (m) =>
-								m.author.id === player.user.id; // Only collect messages from the author of the command
-							const collector =
-								uno_players.game_channel.createMessageCollector(
-									{
-										filter: r_filter,
-										time: 60000,
-									}
-								);
-							collector.on(
-								"collect",
-								async (collectedMessage) => {
-									if (collectedMessage.content == `stop`) {
-										collector.stop();
-										resolve();
-										return;
-									}
-									const r_args =
-										collectedMessage.content.split(` `);
-									const r_card_color = r_args.find(
-										(argument) =>
-											color_keys.includes(argument)
-									);
-									const r_card_icon =
-										r_args.find((argument) =>
-											icon_keys.includes(argument)
-										) ??
-										icon_values.find((i) => {
-											collectedMessage.content
-												.toLowerCase()
-												.includes(i.toLowerCase());
-										});
-									const new_card_chosen =
-										player.hand.check_for_card(
-											`${r_card_color} ${r_card_icon}`
-										);
-									if (!new_card_chosen) {
-										return;
-									}
-									player.play(new_card_chosen, pile_chosen);
-									await uno_players.game_channel.send({
-										content: `${
-											player.user.username
-										} played a **${
-											new_card_chosen.front.text
-										}** on pile ${
-											uno_players.drawpile.discardpiles.indexOf(
-												pile_chosen
-											) + 1
-										}.`,
-									});
-									collector.stop();
-									resolve();
-								}
-							);
-
-							collector.on("end", async (collected) => {
-								uno_players.input_state = false;
-								if (collected.size === 0) {
-									uno_players.game_channel.send(
-										"You timed out, playing a random card..."
-									);
-
-									await uno_players.game_channel.send({
-										content: `${
-											player.user.username
-										} played a **${
-											player.hand[0].text
-										}** on pile ${
-											uno_players.drawpile.discardpiles.indexOf(
-												pile_chosen
-											) + 1
-										}.`,
-									});
-									player.play(player.hand[0], pile_chosen);
-									collector.stop();
-									resolve();
-								}
-							});
-						});
-						await patience_promise;
-					}
-					// HOUSE RULE - jump-ins' symbols and modifiers activate
-					/*
-					await process_effects(card_chosen.icon);
-					if (card_chosen.modifiers) {
-						card_chosen.modifiers.forEach(
-							async (mod) => await process_effects(mod)
-						);
-					}*/
 					return;
 				}
 				// draw a card
@@ -508,35 +393,215 @@ module.exports = {
 				}
 				// check if card exists
 				if (!card_chosen) {
-					console.log(
-						`could not find card ${card_color} ${card_icon}`
-					);
+					console.log(`could not find card`);
 					return;
 				}
+				const pile_chosen =
+					pile_indicator != undefined
+						? drawpile.discardpiles[parseInt(pile_indicator[1]) - 1]
+						: drawpile.discardpiles[
+								drawpile.discardpiles
+									.map((p) => p.top_card)
+									.findIndex(
+										(d) =>
+											d.wild ||
+											d.color == card_chosen.color ||
+											d.icon == card_chosen.icon
+									)
+						  ] ?? drawpile.discardpiles[0];
+				console.log(pile_chosen);
+				const current_card = pile_chosen.top_card;
+
+				// if user is not in the game
+				if (player == undefined || user_index < 0) {
+					return;
+				}
+
+				// effect processing
+				const process_effects = async (symbol) => {
+					uno_players.input_state = true;
+					await effect_list[effect_names.indexOf(symbol)]?.effect({
+						uno_players,
+						card_chosen,
+						pile_chosen,
+						player,
+						currently_inactive_discard_pile,
+						message,
+					});
+					uno_players.input_state = false;
+				};
+
+				// the jump-in (rule 2, 13) + patience (rule 7)
+				if (jump_in_flag) {
+					if (!card_chosen) {
+						return;
+					}
+					if (
+						!(
+							card_chosen.icon == current_card.icon &&
+							card_chosen.color == current_card.color
+						)
+					) {
+						await game_channel.send(
+							`${player.user} jumped in with the wrong card... draw 1 card.`
+						);
+						player.draw(drawpile, 1);
+						return;
+					}
+					player.play(card_chosen, pile_chosen);
+					await game_channel.send(
+						`${
+							player.user.globalName ?? player.user.username
+						} jumped in with a **${card_chosen.text}**!`
+					);
+					if (current_player_flag) {
+						await game_channel.send(
+							`**Patience bonus!** You can play **any** other food on the same dish.`
+						);
+						const patience_promise = new Promise((resolve) => {
+							uno_players.input_state = true;
+							const r_filter = (m) =>
+								m.author.id === player.user.id; // Only collect messages from the author of the command
+							const collector =
+								uno_players.game_channel.createMessageCollector(
+									{
+										filter: r_filter,
+										time: 60000,
+									}
+								);
+							collector.on(
+								"collect",
+								async (collectedMessage) => {
+									if (collectedMessage.content == `stop`) {
+										collector.stop();
+										resolve();
+										return;
+									}
+									const r_args =
+										collectedMessage.content.split(` `);
+									const new_card_chosen = r_args.reduce(
+										(acc, cv) => {
+											if (acc) {
+												return acc;
+											} else {
+												return player.hand.check_for_card(
+													cv
+												);
+											}
+										},
+										undefined
+									);
+									if (!new_card_chosen) {
+										return;
+									}
+									player.play(new_card_chosen, pile_chosen);
+									await uno_players.game_channel.send({
+										content: `${
+											player.user.globalName ??
+											player.user.username
+										} played a **${
+											new_card_chosen.front.text
+										}** on dish ${
+											uno_players.drawpile.discardpiles.indexOf(
+												pile_chosen
+											) + 1
+										}.`,
+									});
+									collector.stop();
+									resolve();
+								}
+							);
+
+							collector.on("end", async (collected) => {
+								uno_players.input_state = false;
+								if (collected.size === 0) {
+									uno_players.game_channel.send(
+										"You timed out, playing a random card..."
+									);
+
+									await uno_players.game_channel.send({
+										content: `${
+											player.user.globalName ??
+											player.user.username
+										} played a **${
+											player.hand[0].text
+										}** on dish ${
+											uno_players.drawpile.discardpiles.indexOf(
+												pile_chosen
+											) + 1
+										}.`,
+									});
+									player.play(player.hand[0], pile_chosen);
+									collector.stop();
+									resolve();
+								}
+							});
+						});
+						await patience_promise;
+					}
+					// HOUSE RULE - jump-ins' symbols and modifiers activate
+					/*
+					await process_effects(card_chosen.icon);
+					if (card_chosen.modifiers) {
+						card_chosen.modifiers.forEach(
+							async (mod) => await process_effects(mod)
+						);
+					}*/
+					return;
+				}
+
 				// check if it's the user's turn
 				if (!current_player_flag) {
 					console.log(
-						`It's not ${message.author.username}'s turn. It's currently ${uno_players.current_user.username}'s turn.`
+						`It's not ${
+							message.author.globalName ?? message.author.username
+						}'s turn. It's currently ${
+							uno_players.current_user.globalName ??
+							uno_players.current_user.username
+						}'s turn.`
 					);
 					return;
 				}
 
 				// check if card is valid
-				const wild_flag =
-					current_card.modifiers.includes(`w`) ||
-					card_chosen.modifiers.includes(`w`);
+				const wild_flag = current_card.wild || card_chosen.wild;
 				const color_flag = current_card.color == card_chosen.color;
 				const icon_flag = current_card.icon == card_chosen.icon;
-				const card_match_bypass = [
-					card_chosen.icon,
-					...card_chosen.modifiers,
-				].find(
+				// to-do: find some way to determine whether these things appear on a modifier instead
+				const draw_stack_flag = [card_chosen.icon].find((symbol) => {
+					if (
+						[current_card.icon, ...current_card.modifiers].filter(
+							(n) => /^\+\d+/.test(n)
+						).length == 0 ||
+						uno_players.draw_stack < 1
+					) {
+						return false;
+					}
+					function compare_draw(a, b) {
+						const value_a = parseInt(a.slice(1));
+						const value_b = parseInt(b.slice(1));
+						return value_a >= value_b;
+					}
+					return (
+						effect_list[effect_names.indexOf(symbol)]
+							?.draw_stackable &&
+						(!/^\+\d+/.test(symbol) ||
+							compare_draw(symbol, current_card.icon))
+					);
+				});
+				const card_match_bypass = [card_chosen.icon].find(
 					(symbol) =>
 						effect_list[effect_names.indexOf(symbol)]
 							?.card_match_bypass
 				);
 				if (
-					!(wild_flag || color_flag || icon_flag || card_match_bypass)
+					!(
+						wild_flag ||
+						color_flag ||
+						icon_flag ||
+						card_match_bypass ||
+						draw_stack_flag
+					)
 				) {
 					await game_channel.send(
 						`That card cannot be placed there.`
@@ -544,9 +609,7 @@ module.exports = {
 
 					return;
 				}
-				const inactive_pile_flag =
-					pile_indicator[1] ==
-					currently_inactive_discard_pile.toString();
+				const inactive_pile_flag = !pile_chosen.active;
 				const inactive_pile_bypass = [
 					card_chosen.icon,
 					...card_chosen.modifiers,
@@ -556,7 +619,7 @@ module.exports = {
 							?.inactive_pile_bypass
 				);
 				if (inactive_pile_flag && !inactive_pile_bypass) {
-					await game_channel.send(`That pile is currently inactive.`);
+					await game_channel.send(`That dish is currently inactive.`);
 					return;
 				}
 				const draw_stackable =
@@ -574,9 +637,9 @@ module.exports = {
 				// playing the card
 				player.play(card_chosen, pile_chosen);
 				await game_channel.send({
-					content: `${player.user.username} played a **${
-						card_chosen.text
-					}** on pile ${
+					content: `${
+						player.user.globalName ?? player.user.username
+					} played a **${card_chosen.text}** on dish ${
 						drawpile.discardpiles.indexOf(pile_chosen) + 1
 					}.`,
 				});
