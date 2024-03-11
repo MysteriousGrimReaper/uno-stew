@@ -1,6 +1,7 @@
 const path = require("path");
 const dir = `C:/Users/A/Documents/GitHub/uno-stew/uno-stew`;
 const stew_path = path.join(dir, `/game-lists/stew`);
+const wait = require("node:timers/promises").setTimeout;
 const {
 	color_map,
 	icon_map,
@@ -441,7 +442,11 @@ class PlayerManager extends Array {
 		if (this.attack_counter >= 10) {
 			const cards_drawn = Math.ceil(Math.random() * 10);
 			await this.game_channel.send(
-				`The oven has **overheated**! ${roller.user} draws ${cards_drawn} cards.`
+				`The oven has **overheated**! It spews out... `
+			);
+			await wait(1000);
+			await this.game_channel.send(
+				`**${cards_drawn}** card(s) for ${roller.user}.`
 			);
 			await roller.draw(this.drawpile, cards_drawn);
 			this.attack_counter = 1;

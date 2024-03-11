@@ -91,8 +91,8 @@ module.exports = {
 			(number) => dance_emojis[number]
 		);
 		let move_index = 0;
-		const timeTag = `<t:${Math.floor(
-			(message.createdTimestamp + (SECONDS + 18) * 1000) / 1000
+		let timeTag = `<t:${Math.floor(
+			(message.createdTimestamp + SECONDS * 1000) / 1000
 		)}:R>`;
 		const dance_message = await uno_players.game_channel.send({
 			components: [dance_row],
@@ -104,6 +104,9 @@ module.exports = {
 				`▪️`.repeat(dance_length - move_index - 1)
 			}\n${dance_routine.join(``)}`,
 		});
+		timeTag = `<t:${Math.floor(
+			(dance_message.createdTimestamp + SECONDS * 1000) / 1000
+		)}:R>`;
 		const filter = (i) => i.user.id == dancer.user.id;
 		const dance_collector = dance_message.createMessageComponentCollector({
 			filter,

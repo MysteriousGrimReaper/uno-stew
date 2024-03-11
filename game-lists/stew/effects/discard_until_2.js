@@ -1,12 +1,9 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const { ButtonBuilder, ActionRowBuilder, ButtonStyle } = require("discord.js");
 module.exports = {
-	name: `-rc`,
-	text: `Repeat Colour Discard`,
-	async effect({ uno_players, player, card_chosen }) {
-		const find_same_color = player.hand.filter(
-			(card) => card.front.color == card_chosen.front.color
-		);
+	name: `-x2`,
+	text: `Discard All Except 2`,
+	async effect({ uno_players, player }) {
 		const cards_button = new ButtonBuilder()
 			.setCustomId(`view-cards`)
 			.setLabel("Playable Cards")
@@ -14,7 +11,7 @@ module.exports = {
 		const cards_row = new ActionRowBuilder().addComponents(cards_button);
 		const cards_message = await uno_players.game_channel.send({
 			components: [cards_row],
-			content: `Choose another card of the same color and a pile to discard to (or type \`stop\` to cancel the effect)!`,
+			content: `Choose a card and a pile to discard to (or type \`stop\` to cancel the effect)!`,
 		});
 		const repeat_discard_promise = new Promise((resolve) => {
 			const filter = (m) => m.author.id === player.user.id; // Only collect messages from the author of the command
@@ -26,16 +23,12 @@ module.exports = {
 			const button_collector =
 				cards_message.createMessageComponentCollector({
 					filter: filter2,
-					time: 60000,
+					time: 120000,
 				});
 			button_collector.on(`collect`, async (i) => {
 				await i.reply({
 					ephemeral: true,
-					content: `${
-						find_same_color.length > 0
-							? `${find_same_color.text}`
-							: `You have no playable cards left in your hand, type \`stop\` to exit.`
-					}`,
+					content: `${player.hand.text}`,
 				});
 			});
 			button_collector.on(`ignore`, async (i) => {
@@ -48,7 +41,7 @@ module.exports = {
 			button_collector.on(`end`, async () => {
 				await cards_message.edit({
 					components: [],
-					content: `Choose another card of the same color and a pile to discard to (or type \`stop\` to cancel the effect)!`,
+					content: `Choose a card and a pile to discard to (or type \`stop\` to cancel the effect)!`,
 				});
 			});
 			collector.on("collect", async (collectedMessage) => {
@@ -65,7 +58,7 @@ module.exports = {
 					/^d[1-4]$/.test(argument)
 				);
 				// console.log(args);
-				const new_card_chosen = args.reduce((acc, cv) => {
+				const card_chosen = args.reduce((acc, cv) => {
 					if (acc) {
 						return acc;
 					} else {
@@ -90,17 +83,16 @@ module.exports = {
 				if (!card_chosen || !pile_chosen) {
 					return;
 				}
-				if (new_card_chosen.front.color == card_chosen.front.color) {
-					player.play(new_card_chosen, pile_chosen);
-					await uno_players.game_channel.send({
-						content: `${player.user.username} played a **${
-							new_card_chosen.front.text
-						}** on pile ${
-							uno_players.drawpile.discardpiles.indexOf(
-								pile_chosen
-							) + 1
-						}.`,
-					});
+				player.play(card_chosen, pile_chosen);
+				await uno_players.game_channel.send({
+					content: `${player.user.username} placed a **${
+						card_chosen.front.text
+					}** on dish ${
+						uno_players.drawpile.discardpiles.indexOf(pile_chosen) +
+						1
+					}. (${player.hand.length - 2} left)`,
+				});
+				if (player.hand.length <= 2) {
 					collector.stop();
 					resolve();
 				}
