@@ -1,10 +1,18 @@
 const path = require("path");
 const dir = `C:/Users/A/Documents/GitHub/uno-stew/uno-stew`;
 const stew_path = path.join(dir, `/game-lists/stew`);
-const { color_map, icon_map, emoji_map, special_emoji_map } = require(path.join(
-	stew_path,
-	`/maps.js`
-));
+const {
+	color_map,
+	icon_map,
+	emoji_map,
+	special_emoji_map,
+	color_keys,
+} = require(path.join(stew_path, `/maps.js`));
+/**
+ * Shuffles the array.
+ * @param {Array} array
+ * @returns This modifies the original array.
+ */
 function shuffle(array) {
 	let currentIndex = array.length,
 		randomIndex;
@@ -24,6 +32,19 @@ function shuffle(array) {
 
 	return array;
 }
+/**
+ * Shuffles the array.
+ * @param {Array} array
+ * @returns This does not modify the original array.
+ */
+function shuffleArray(array) {
+	for (let i = array.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[array[i], array[j]] = [array[j], array[i]];
+	}
+	return array;
+}
+
 /**
  * Represents a card object, with a front and back side.
  *
@@ -47,9 +68,6 @@ class Card {
 	get modifiers() {
 		return this.front.modifiers;
 	}
-	get wild() {
-		return this.front.wild;
-	}
 	set color(c) {
 		this.front.color = c;
 	}
@@ -59,6 +77,9 @@ class Card {
 	set modifiers(m) {
 		this.front.modifiers = m;
 	}
+	/**
+	 * Flips the card to the back side.
+	 */
 	flip() {
 		[this.front, this.back] = [this.back, this.front];
 	}
@@ -79,12 +100,14 @@ class Card {
  * @param {Array} modifiers The modifiers(s) that the card has. All modifierss are strings.
  */
 class CardFace {
-	constructor({ icon, color, modifiers, wild }) {
+	constructor({ icon, color, modifiers }) {
 		this.modifiers = modifiers ?? []; // what modifiers(s) the card has (array)
-		this.wild = wild;
-		this.wild_colors = this.wild ? [] : [];
 		this.icon = icon ?? ``; // card number or symbol (string)
-		this.color = this.wild ? `Wild` : color; // card colour (string)
+		this.color = color; // card colour (string)
+		this.wild_colors =
+			this.color == `w`
+				? shuffleArray(color_keys.filter((c) => c != `w`)).slice(6)
+				: [];
 		this.emoji = /^\d+$/.test(icon)
 			? emoji_map.get(this.color)
 			: special_emoji_map.get(this.color);
@@ -135,10 +158,19 @@ class Player {
 		this.towers = [];
 		this.character;
 	}
+	/**
+	 * Returns the player's user ID.
+	 */
 	get id() {
 		return this.user.id;
 	}
-	draw(drawpile, number) {
+	/**
+	 * Makes the player draw a certain number of cards.
+	 * @param {DrawPile} drawpile Which DrawPile should the player draw from?
+	 * @param {Number} number How many cards does the player draw? (Default: 1)
+	 * @returns
+	 */
+	async draw(drawpile, number = 1) {
 		const cards_drawn = [];
 		for (let i = 0; i < number; i++) {
 			cards_drawn.push(drawpile.draw(this));
@@ -148,6 +180,11 @@ class Player {
 		} else {
 			this.uno_callable = false;
 		}
+		await this.user.send(
+			`You drew the following card(s):\n- ${cards_drawn
+				.map((c) => c.text)
+				.join(`\n- `)}`
+		);
 		return cards_drawn;
 	}
 	/**
@@ -376,21 +413,6 @@ class DiscardPile extends Array {
 		return this[this.length - 1];
 	}
 }
-/**
- * Represents a counter which can hold a certain value.
- */
-class Counter {
-	constructor(max = 0) {
-		this.max = max;
-		this.value = 0;
-	}
-	step(steps, fn) {
-		this.value += steps;
-		if (this.value >= this.max) {
-			fn();
-		}
-	}
-}
 
 /**
  * Manages all the players.
@@ -404,6 +426,40 @@ class PlayerManager extends Array {
 		this.input_state = false;
 		this.winners_list = [];
 		this.losers_list = [];
+		this.attack_counter = 1;
+	}
+	/**
+	 * Dials up the oven (Attack d10).
+	 * @param {Number} strength By how many faces should the die turn? (Default: 1)
+	 * @param {Player} roller Who is rolling? (Default: current turn)
+	 * @returns true if the oven activates, false otherwise
+	 */
+	async attack(strength = 1, roller = this[this.current_turn_index]) {
+		this.attack_counter += strength;
+		const emoji_counter =
+			`🔥`.repeat(this.attack_counter) +
+			`▪️`.repeat(Math.max(0, 10 - this.attack_counter));
+		if (this.attack_counter >= 10) {
+			const cards_drawn = Math.ceil(Math.random() * 10);
+			await this.game_channel.send(
+				`The oven has **overheated**! ${roller.user} draws ${cards_drawn} cards.`
+			);
+			await roller.draw(this.drawpile, cards_drawn);
+			this.attack_counter = 1;
+			return true;
+		}
+		await this.game_channel.send(
+			this.attack_counter < 3
+				? `The oven is **warm**. ${emoji_counter}`
+				: this.attack_counter < 5
+				? `The oven is **hot**. ${emoji_counter}`
+				: this.attack_counter < 7
+				? `The oven is **roasting**. ${emoji_counter}`
+				: this.attack_counter < 9
+				? `The oven is **blazing**. ${emoji_counter}`
+				: `The oven is **infernal**. ${emoji_counter}`
+		);
+		return false;
 	}
 	get current_user() {
 		return this.current_player.user;
@@ -474,6 +530,7 @@ class PlayerManager extends Array {
 	 */
 	find_player(id) {
 		const index = this.id_map.indexOf(id);
+		console.log(this[index]);
 		return this[index];
 	}
 	/**
@@ -495,7 +552,7 @@ class PlayerManager extends Array {
 	 */
 	remove_player(id) {
 		console.log(this.id_map);
-		if (!this.id_map.indexOf(id)) {
+		if (this.id_map.indexOf(id) < 0) {
 			console.log(`Could not find user with id ${id}`);
 			return;
 		}
@@ -523,7 +580,6 @@ class PlayerManager extends Array {
 module.exports = {
 	Player,
 	PlayerManager,
-	Counter,
 	DiscardPile,
 	DrawPile,
 	Card,

@@ -26,12 +26,13 @@ function shuffle(array) {
 
 	return array;
 }
-const SECONDS = 45;
+const SECONDS = 25;
+const dance_length = 10;
 module.exports = {
 	name: `da`,
 	text: `Dancing`,
 	async effect({ uno_players, message }) {
-		const dancer = uno_players.next_player();
+		const dancer = uno_players.next_player;
 		const dance_emojis = [
 			`➡️`,
 			`⬅️`,
@@ -77,7 +78,7 @@ module.exports = {
 			`dance-up`,
 			`dance-down`,
 		];
-		const dance_length = 24;
+
 		uno_players.step();
 		const backend_dance_routine = createRandomArray(
 			[0, 1, 2, 3],
@@ -91,11 +92,17 @@ module.exports = {
 		);
 		let move_index = 0;
 		const timeTag = `<t:${Math.floor(
-			(message.createdTimestamp + SECONDS * 1000) / 1000
+			(message.createdTimestamp + (SECONDS + 18) * 1000) / 1000
 		)}:R>`;
 		const dance_message = await uno_players.game_channel.send({
 			components: [dance_row],
-			content: `Dance be upon ye, ${dancer.user}! Finish the dance ${timeTag}, or draw 3 cards:\n${dance_routine[move_index]}`,
+			content: `Dance be upon ye, ${
+				dancer.user
+			}! Finish the dance ${timeTag}, or draw 3 cards:\n${
+				`▪️`.repeat(move_index) +
+				`🔽` +
+				`▪️`.repeat(dance_length - move_index - 1)
+			}\n${dance_routine.join(``)}`,
 		});
 		const filter = (i) => i.user.id == dancer.user.id;
 		const dance_collector = dance_message.createMessageComponentCollector({
@@ -113,7 +120,7 @@ module.exports = {
 			if (dance_routine_ids[move_index] == customId) {
 				move_index++;
 				if (move_index >= dance_routine.length) {
-					await uno_players.game_channel.send({
+					await i.update({
 						content: `${dancer.user} finished the dance!`,
 					});
 					dance_collector.stop();
@@ -121,7 +128,13 @@ module.exports = {
 				}
 				await i.update({
 					components: [dance_row],
-					content: `Dance be upon ye, ${dancer.user}! Finish the dance ${timeTag}, or draw 3 cards:\n${dance_routine[move_index]}\n(${move_index}/${dance_routine.length})`,
+					content: `Dance be upon ye, ${
+						dancer.user
+					}! Finish the dance ${timeTag}, or draw 3 cards:\n${
+						`▪️`.repeat(move_index) +
+						`🔽` +
+						`▪️`.repeat(dance_length - move_index - 1)
+					}\n${dance_routine.join(``)}`,
 				});
 			} else {
 				await uno_players.game_channel.send(

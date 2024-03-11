@@ -80,7 +80,6 @@ module.exports = {
 				table_button,
 				player_button
 			);
-			const attacker = new Counter();
 			const drawpile = new DrawPile().load(deck);
 			const wild_drawpile = new DrawPile();
 			const discardpile_1 = new DiscardPile();
@@ -177,7 +176,14 @@ module.exports = {
 									`\n`
 								)}\nThe turn order is as follows:\n ${uno_players
 								.map(
-									(p) => p.user.globalName ?? p.user.username
+									(p, ci) =>
+										(uno_players.current_turn_index == ci
+											? `**`
+											: ``) +
+										(p.user.globalName ?? p.user.username) +
+										(uno_players.current_turn_index == ci
+											? `**`
+											: ``)
 								)
 								.join(`, `)}.`,
 							ephemeral: true,
@@ -234,22 +240,7 @@ module.exports = {
 				}
 
 				const args = message.content.split(` `);
-				if (
-					args[0] == `debug` &&
-					args[1] == `addcard` &&
-					message.author.id == `315495597874610178`
-				) {
-					try {
-						player.hand.push(
-							new Card(
-								new CardFace(JSON.parse(args[2])),
-								new CardFace(JSON.parse(args[2]))
-							)
-						);
-					} catch (error) {
-						await player.user.send(`An error occurred: ${error}`);
-					}
-				}
+
 				console.log(player.hand);
 				const jump_in_flag = args.find(
 					(argument) =>
@@ -285,9 +276,6 @@ module.exports = {
 							`${uno_players.current_user.id}`
 						);
 					}
-					console.log(
-						`uno_players.current_turn_index: ${uno_players.current_turn_index}`
-					);
 					if (uno_players.current_player.hand.length >= 25) {
 						await game_channel.send(
 							`${uno_players.current_user} has perished to the stew... (25 or more cards)`
@@ -297,6 +285,7 @@ module.exports = {
 								uno_players.current_player.hand.pop()
 							);
 						}
+
 						uno_players.add_loser(`${uno_players.current_user.id}`);
 						console.log(uno_players);
 					}
@@ -310,12 +299,26 @@ module.exports = {
 					} else {
 						player.uno_callable = false;
 					}
+					if (uno_players.winners_list.length > 0) {
+						await game_channel.send(
+							`Congratulations to ${uno_players.winners_list[0].user} for winning!`
+						);
+						message_collector.stop();
+						return;
+					}
+					if (uno_players.length == 1) {
+						await game_channel.send(
+							`Congratulations to ${uno_players[0].user} for winning!`
+						);
+						message_collector.stop();
+						return;
+					}
 					uno_players.step();
 					// send info
 					await game_channel.send({
 						content: `${
 							uno_players.draw_stack > 0
-								? `You have been draw attacked, ${uno_players.current_user}! Type \`draw\` to draw the cards or stack the draw by playing a draw card with equal or higher value.`
+								? `You have been draw attacked, ${uno_players.current_user}! Type \`draw\` to draw **${uno_players.draw_stack}** cards or stack by playing a draw card with equal or higher value.`
 								: `It is now ${
 										uno_players.current_user
 								  }'s turn! Dish **${
@@ -331,22 +334,51 @@ module.exports = {
 						}`
 					);
 				}
-
+				/*
 				console.log(`message: ${message.content}`);
 				console.log(`author: ${message.author.username}`);
-				// debug command, type "# debug remove" to use
-				if (message.content.includes(`debug remove`)) {
-					if (!debug_ids.includes(message.author.id)) {
+				*/
+				// debug commands
+				if (debug_ids.includes(message.author.id)) {
+					// debug command, type "# debug remove" to use
+					if (message.content.includes(`debug remove`)) {
+						if (!debug_ids.includes(message.author.id)) {
+							return;
+						}
+						const removal_index = parseInt(message.content);
+						if (isNaN(removal_index)) {
+							return;
+						}
+						player.hand.remove_card_by_index(removal_index);
+						console.log(`removed card at index ${removal_index}`);
 						return;
 					}
-					const removal_index = parseInt(message.content);
-					if (isNaN(removal_index)) {
-						return;
+					// debug command, add a card
+					if (message.content.includes(`debug addcard`)) {
+						try {
+							player.hand.push(
+								new Card(
+									new CardFace(
+										JSON.parse(args.slice(2).join(` `))
+									),
+									new CardFace(
+										JSON.parse(args.slice(2).join(` `))
+									)
+								)
+							);
+							await game_channel.send(
+								`Added card \`${
+									player.hand[player.hand.length - 1].text
+								}\` to your hand.`
+							);
+						} catch (error) {
+							await player.user.send(
+								`An error occurred: ${error}`
+							);
+						}
 					}
-					player.hand.remove_card_by_index(removal_index);
-					console.log(`removed card at index ${removal_index}`);
-					return;
 				}
+
 				// check your hand
 				if (message.content == `hand`) {
 					message.author.send({
@@ -362,7 +394,7 @@ module.exports = {
 					current_player_flag
 				) {
 					if (uno_players.draw_stack > 0) {
-						const draws = player.draw(
+						const draws = await player.draw(
 							drawpile,
 							uno_players.draw_stack
 						);
@@ -564,7 +596,8 @@ module.exports = {
 				}
 
 				// check if card is valid
-				const wild_flag = current_card.wild || card_chosen.wild;
+				const wild_flag =
+					current_card.color == `w` || card_chosen.color == `w`;
 				const color_flag = current_card.color == card_chosen.color;
 				const icon_flag = current_card.icon == card_chosen.icon;
 				// to-do: find some way to determine whether these things appear on a modifier instead

@@ -1,21 +1,19 @@
 module.exports = {
-	name: `th`,
-	text: `Trade Hands`,
+	name: `xh`,
+	text: `Extreme Heat`,
 	async effect({ uno_players, player }) {
 		if (uno_players.length == 2) {
-			await uno_players.game_channel.send(
-				`You traded hands with your opponent.`
+			await uno_players.game_channel.send(`You heated up your opponent.`);
+			uno_players.attack(
+				2,
+				uno_players[(uno_players.current_turn_index + 1) % 2]
 			);
-			[uno_players[0].hand, uno_players[1].hand] = [
-				uno_players[1].hand,
-				uno_players[0].hand,
-			];
 			return;
 		}
 		await uno_players.game_channel.send(
-			`${player.user}, type the name of a player to trade with them.`
+			`${player.user}, type the name of a player to heat up.`
 		);
-		const trade_hands_promise = new Promise((resolve) => {
+		const extreme_heat_promise = new Promise((resolve) => {
 			const filter = (m) => m.author.id === player.user.id; // Only collect messages from the author of the command
 
 			const collector = uno_players.game_channel.createMessageCollector({
@@ -29,12 +27,9 @@ module.exports = {
 				);
 				if (target_player) {
 					await collectedMessage.reply(
-						`You traded hands with ${target_player.user}.`
+						`You heated ${target_player.user}.`
 					);
-					[target_player.hand, player.hand] = [
-						player.hand,
-						target_player.hand,
-					];
+					uno_players.attack(2, target_player);
 					collector.stop();
 					resolve(); // Resolve the promise when the condition is met
 				}
@@ -43,23 +38,19 @@ module.exports = {
 			collector.on("end", (collected) => {
 				if (collected.size === 0) {
 					uno_players.game_channel.send(
-						"You timed out. Trading with a another player..."
+						"You timed out. Heating up another player..."
 					);
 					const target_player = uno_players.next_player;
-
-					[target_player.hand, player.hand] = [
-						player.hand,
-						target_player.hand,
-					];
 					uno_players.game_channel.send(
-						`You traded hands with ${target_player.user}.`
+						`You heated up ${target_player.user}.`
 					);
+					uno_players.attack(2, target_player);
 
 					collector.stop();
 					resolve(); // Resolve the promise when the condition is met
 				}
 			});
 		});
-		await trade_hands_promise;
+		await extreme_heat_promise;
 	},
 };
