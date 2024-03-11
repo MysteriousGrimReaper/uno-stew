@@ -26,7 +26,7 @@ for (const effect_file of effect_folder) {
 	icon_map.set(effect.name, effect.text);
 }
 
-console.log(icon_map);
+// console.log(icon_map);
 const color_map = new Map();
 color_map.set("r", "Red");
 color_map.set("b", "Blue");

@@ -239,7 +239,6 @@ class Hand extends Array {
 		return this.splice(index, 1)[0];
 	}
 	check_for_card(card_text) {
-		console.log(`hi`);
 		return this.find((card_in_hand) => {
 			return card_in_hand.front.aliases.includes(card_text.toLowerCase());
 		});
@@ -449,15 +448,19 @@ class PlayerManager extends Array {
 			return true;
 		}
 		await this.game_channel.send(
-			this.attack_counter < 3
-				? `The oven is **warm**. ${emoji_counter}`
-				: this.attack_counter < 5
-				? `The oven is **hot**. ${emoji_counter}`
-				: this.attack_counter < 7
-				? `The oven is **roasting**. ${emoji_counter}`
-				: this.attack_counter < 9
-				? `The oven is **blazing**. ${emoji_counter}`
-				: `The oven is **infernal**. ${emoji_counter}`
+			`${
+				roller.user.globalName ?? roller.user.username
+			} turns up the heat. ${
+				this.attack_counter < 3
+					? `The oven is **warm**. ${emoji_counter}`
+					: this.attack_counter < 5
+					? `The oven is **hot**. ${emoji_counter}`
+					: this.attack_counter < 7
+					? `The oven is **roasting**. ${emoji_counter}`
+					: this.attack_counter < 9
+					? `The oven is **blazing**. ${emoji_counter}`
+					: `The oven is **infernal**. ${emoji_counter}`
+			}`
 		);
 		return false;
 	}

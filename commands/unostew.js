@@ -23,7 +23,8 @@ for (const effect_file of effect_folder) {
  */
 const effect_names = effect_list.map((eff) => eff.name);
 const effect_texts = effect_list.map((eff) => eff.text);
-console.log(effect_names);
+const wait = require("node:timers/promises").setTimeout;
+// console.log(effect_names);
 const {
 	SlashCommandBuilder,
 	EmbedBuilder,
@@ -241,7 +242,7 @@ module.exports = {
 
 				const args = message.content.split(` `);
 
-				console.log(player.hand);
+				// console.log(player.hand);
 				const jump_in_flag = args.find(
 					(argument) =>
 						/^j$/.test(argument) || /^jump$/.test(argument)
@@ -252,7 +253,7 @@ module.exports = {
 				const pile_indicator = args.find((argument) =>
 					/^d[1-4]$/.test(argument)
 				);
-				console.log(args);
+				// console.log(args);
 				const card_chosen = args.reduce((acc, cv) => {
 					if (acc) {
 						return acc;
@@ -260,7 +261,7 @@ module.exports = {
 						return player.hand.check_for_card(cv);
 					}
 				}, undefined);
-				console.log(card_chosen);
+				// console.log(card_chosen);
 				const debug_ids = [
 					`315495597874610178`,
 					`1014413186017021952`,
@@ -287,7 +288,7 @@ module.exports = {
 						}
 
 						uno_players.add_loser(`${uno_players.current_user.id}`);
-						console.log(uno_players);
+						// console.log(uno_players);
 					}
 					currently_inactive_discard_pile =
 						Math.max(1, Math.ceil(Math.random() * 4)) - 1;
@@ -301,14 +302,14 @@ module.exports = {
 					}
 					if (uno_players.winners_list.length > 0) {
 						await game_channel.send(
-							`Congratulations to ${uno_players.winners_list[0].user} for winning!`
+							`## Congratulations to ${uno_players.winners_list[0].user} for winning!`
 						);
 						message_collector.stop();
 						return;
 					}
 					if (uno_players.length == 1) {
 						await game_channel.send(
-							`Congratulations to ${uno_players[0].user} for winning!`
+							`## Congratulations to ${uno_players[0].user} for winning!`
 						);
 						message_collector.stop();
 						return;
@@ -398,7 +399,7 @@ module.exports = {
 							drawpile,
 							uno_players.draw_stack
 						);
-						console.log(uno_players.draw_stack);
+						// console.log(uno_players.draw_stack);
 						await player.user.send(
 							`You drew the following (${
 								uno_players.draw_stack
@@ -425,7 +426,7 @@ module.exports = {
 				}
 				// check if card exists
 				if (!card_chosen) {
-					console.log(`could not find card`);
+					// console.log(`could not find card`);
 					return;
 				}
 				const pile_chosen =
@@ -441,7 +442,7 @@ module.exports = {
 											d.icon == card_chosen.icon
 									)
 						  ] ?? drawpile.discardpiles[0];
-				console.log(pile_chosen);
+				// console.log(pile_chosen);
 				const current_card = pile_chosen.top_card;
 
 				// if user is not in the game
@@ -584,14 +585,7 @@ module.exports = {
 
 				// check if it's the user's turn
 				if (!current_player_flag) {
-					console.log(
-						`It's not ${
-							message.author.globalName ?? message.author.username
-						}'s turn. It's currently ${
-							uno_players.current_user.globalName ??
-							uno_players.current_user.username
-						}'s turn.`
-					);
+					// console.log(`Not the right turn.`);
 					return;
 				}
 
@@ -605,8 +599,7 @@ module.exports = {
 					if (
 						[current_card.icon, ...current_card.modifiers].filter(
 							(n) => /^\+\d+/.test(n)
-						).length == 0 ||
-						uno_players.draw_stack < 1
+						).length == 0
 					) {
 						return false;
 					}
@@ -658,9 +651,9 @@ module.exports = {
 				const draw_stackable =
 					effect_list[effect_names.indexOf(card_chosen.icon)]
 						?.draw_stackable;
-				console.log(`draw_stackable: ${draw_stackable}`);
-				console.log(`card_chosen:`);
-				console.log(card_chosen);
+				// console.log(`draw_stackable: ${draw_stackable}`);
+				// console.log(`card_chosen:`);
+				// console.log(card_chosen);
 				if (!draw_stackable && uno_players.draw_stack > 0) {
 					await game_channel.send(
 						`A draw attack was played upon you! Stack the draws by playing a draw card of equal or higher value, or by using a card's special effect. (If you have no valid cards, type \`draw\` to draw.)`
