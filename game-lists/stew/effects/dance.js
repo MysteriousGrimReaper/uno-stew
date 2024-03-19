@@ -26,7 +26,7 @@ function shuffle(array) {
 
 	return array;
 }
-const SECONDS = 25;
+const SECONDS = 14;
 const dance_length = 10;
 module.exports = {
 	name: `da`,
@@ -125,6 +125,7 @@ module.exports = {
 				if (move_index >= dance_routine.length) {
 					await i.update({
 						content: `${dancer.user} finished the dance!`,
+						components: []
 					});
 					dance_collector.stop();
 					return;

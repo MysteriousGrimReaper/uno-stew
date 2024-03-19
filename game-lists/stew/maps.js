@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const dir = `C:/Users/A/Documents/GitHub/uno-stew/uno-stew`;
+const dir = `C:/Users/gooda/Documents/GitHub/uno-stew/`;
 const effects_path = path.join(dir, `game-lists/stew/effects`);
 const icon_map = new Map();
 

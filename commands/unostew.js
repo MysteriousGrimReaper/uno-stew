@@ -3,7 +3,7 @@
 const DEBUG_DECK = true;
 const fs = require("fs");
 const path = require("path");
-const dir = `C:/Users/A/Documents/GitHub/uno-stew/uno-stew`;
+const dir = `C:/Users/gooda/Documents/GitHub/uno-stew`;
 const signup_path = path.join(dir, `/tools/signup.js`);
 const stew_path = path.join(dir, `/game-lists/stew`);
 const { create_signup } = require(signup_path);
@@ -47,7 +47,8 @@ let hand_collect_reply_fn;
 const get_hand_collect_reply_fn_stew = () => {
 	return hand_collect_reply_fn;
 };
-const rules_embed = new EmbedBuilder().setTitle(`Uno Stew Rules`);
+const rules_embed = new EmbedBuilder().setTitle(`Uno Stew Rules`)
+.setDescription(`https://docs.google.com/document/d/12rInO_Mjnqw0bTIJEw06MAQrpqNmvr-W6N5-pd95UnM/edit?usp=sharing`);
 module.exports = {
 	get_hand_collect_reply_fn_stew,
 	data: new SlashCommandBuilder()
@@ -324,7 +325,15 @@ module.exports = {
 										uno_players.current_user
 								  }'s turn! Dish **${
 										currently_inactive_discard_pile + 1
-								  }** is inactive.`
+								  }** is inactive.\n${drawpile.discardpiles.map((dp, index) => {
+									return {
+										name:
+											`Dish ${index + 1}`,
+										value: `${dp.top_card.emoji} ${dp.top_card.text} ${
+											!dp.active ? ` (inactive)` : ``
+										}`,
+									};
+								}).map((d) => `${d.name}: **${d.value}**`).join(`\n`)}`
 						}`,
 						components: [game_row],
 					});
