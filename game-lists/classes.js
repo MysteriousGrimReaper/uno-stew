@@ -1,4 +1,3 @@
-const path = require("path");
 const wait = require("node:timers/promises").setTimeout;
 const {
 	color_map,
@@ -134,7 +133,7 @@ class CardFace {
 	get text() {
 		let card_text = ``;
 		if (!this.color) {
-			return ``
+			return ``;
 		}
 		const color_name = color_map.get(this.color) ?? this.color;
 		card_text += `${color_name} ` ?? ``;
@@ -206,7 +205,7 @@ class Player {
 	 * @param {DiscardPile} discardpile The discard pile to play the card on.
 	 */
 	play(card, discardpile) {
-		card.player = this
+		card.player = this;
 		discardpile.push(this.hand.remove_card(card));
 
 		if (this.hand.length == 1) {
@@ -258,7 +257,7 @@ class Hand extends Array {
 		});
 	}
 	get text() {
-		return `- ${this.map((card) => `${card.emoji} ${card.hand_text}`).join(`\n- `)}`;
+		return `- ${this.map((card) => card.hand_text).join(`\n- `)}`;
 	}
 	get back_text() {
 		return `- ${this.map((card) => card.back_text).join(`\n- `)}`;
@@ -355,7 +354,7 @@ class DrawPile extends Array {
 		return this.discardpiles
 			.map(
 				(dp, i) =>
-					`- ${!dp.active ? `~~` : ``}Dish ${i + 1}: **${dp.top_card.emoji} ${
+					`- ${!dp.active ? `~~` : ``}Dish ${i + 1}: **${
 						dp.top_card.text
 					}**${!dp.active ? `~~` : ``}`
 			)
@@ -440,7 +439,6 @@ class PlayerManager extends Array {
 		this.winners_list = [];
 		this.losers_list = [];
 		this.attack_counter = 1;
-		this.top_draw = 0
 	}
 	/**
 	 * Dials up the oven (Attack d10).
@@ -534,9 +532,9 @@ class PlayerManager extends Array {
 	reverse() {
 		this.play_direction *= -1;
 		if (this.length == 2) {
-			this.step()
+			this.step();
 		}
-		return this
+		return this;
 	}
 	/**
 	 * Returns all the users

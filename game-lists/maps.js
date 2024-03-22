@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const effects_path = path.join(`../game-lists/`, `effects/`);
-const uno_effects_path = `../uno-stew/game-lists/effects/`
+const uno_effects_path = `../uno-stew/game-lists/effects/`;
 const icon_map = new Map();
 
 const effect_folder = fs.readdirSync(uno_effects_path);

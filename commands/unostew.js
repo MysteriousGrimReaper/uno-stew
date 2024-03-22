@@ -9,9 +9,10 @@ const { create_signup } = require(signup_path);
 const { deck } = require(DEBUG_DECK
 	? path.join(stew_path, `/cards.json`)
 	: path.join(stew_path, `/default_cards.json`));
-const uno_stew_path = `../uno-stew/game-lists`
+const uno_stew_path = `../uno-stew/game-lists`;
 const effects_path = path.join(uno_stew_path, `/effects`);
-const small_effects_path = path.join(stew_path, `/effects`)
+const small_effects_path = path.join(stew_path, `/effects`);
+
 const effect_folder = fs.readdirSync(effects_path);
 const effect_list = [];
 for (const effect_file of effect_folder) {
@@ -48,8 +49,11 @@ let hand_collect_reply_fn;
 const get_hand_collect_reply_fn_stew = () => {
 	return hand_collect_reply_fn;
 };
-const rules_embed = new EmbedBuilder().setTitle(`Uno Stew Rules`)
-.setDescription(`https://docs.google.com/document/d/12rInO_Mjnqw0bTIJEw06MAQrpqNmvr-W6N5-pd95UnM/edit?usp=sharing`);
+const rules_embed = new EmbedBuilder()
+	.setTitle(`Uno Stew Rules`)
+	.setDescription(
+		`https://docs.google.com/document/d/12rInO_Mjnqw0bTIJEw06MAQrpqNmvr-W6N5-pd95UnM/edit?usp=sharing`
+	);
 module.exports = {
 	get_hand_collect_reply_fn_stew,
 	data: new SlashCommandBuilder()
@@ -347,15 +351,21 @@ module.exports = {
 										uno_players.current_user
 								  }'s turn! Dish **${
 										currently_inactive_discard_pile + 1
-								  }** is inactive.\n${drawpile.discardpiles.map((dp, index) => {
-									return {
-										name:
-											`Dish ${index + 1}`,
-										value: `${dp.top_card.emoji} ${dp.top_card.text} ${
-											!dp.active ? ` (inactive)` : ``
-										}`,
-									};
-								}).map((d) => `${d.name}: **${d.value}**`).join(`\n`)}`
+								  }** is inactive.\n${drawpile.discardpiles
+										.map((dp, index) => {
+											return {
+												name: `Dish ${index + 1}`,
+												value: `${dp.top_card.emoji} ${
+													dp.top_card.text
+												} ${
+													!dp.active
+														? ` (inactive)`
+														: ``
+												}`,
+											};
+										})
+										.map((d) => `${d.name}: **${d.value}**`)
+										.join(`\n`)}`
 						}`,
 						components: [game_row],
 					});
