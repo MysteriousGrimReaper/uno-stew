@@ -1,12 +1,7 @@
 const fs = require("fs");
 const path = require("path");
-<<<<<<< HEAD:game-lists/stew/maps.js
-const dir = `C:/Users/A/Documents/GitHub/uno-stew/uno-stew`;
-const effects_path = path.join(dir, `game-lists/stew/effects`);
-=======
 const effects_path = path.join(`../game-lists/`, `effects/`);
-const uno_effects_path = `../uno-stew/game-lists/effects/`
->>>>>>> 7fbfd91146bb9de506d33a2297b5b13623444f21:game-lists/maps.js
+const uno_effects_path = `../uno-stew/game-lists/effects/`;
 const icon_map = new Map();
 
 const effect_folder = fs.readdirSync(uno_effects_path);
