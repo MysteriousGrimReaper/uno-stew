@@ -104,6 +104,7 @@ module.exports = {
 			};
 			uno_players.forEach((player) => {
 				player.draw(drawpile, 7);
+				player.drawpile = drawpile
 				player.user.send(`Your hand:\n${player.hand.text}`);
 			});
 			drawpile.discard(0);
@@ -173,7 +174,7 @@ module.exports = {
 									(p) =>
 										`## ${
 											p.user.globalName ?? p.user.username
-										}\n${p.hand.back_text}`
+										} ${`🍕`.repeat(p.pizza)}\n${p.hand.back_text}`
 								)
 								.join(
 									`\n`
@@ -204,7 +205,20 @@ module.exports = {
 				components: [game_row],
 			});
 			// read messages
+			let cooldown = false
+			const cooldown_timer = 0.5
+			message_collector.on(`ignore`, () => {
+				cooldown = false
+			})
+			message_collector.on(`collect`, async () => {
+				cooldown = true
+				await wait(cooldown_timer * 1000)
+				cooldown = false
+			})
 			message_collector.on(`collect`, async (message) => {
+				if (cooldown) {
+					return
+				}
 				if (
 					message.author.id == `315495597874610178` &&
 					message.content == `stop!`
@@ -283,13 +297,18 @@ module.exports = {
 						await game_channel.send(
 							`${uno_players.current_user} has perished to the stew... (25 or more cards)`
 						);
-						while (uno_players.current_player.hand.length > 0) {
+						while (uno_players.current_player.hand.length > (uno_players.current_player.pizza > 0 ? 7 : 0)) {
 							drawpile.unshift(
 								uno_players.current_player.hand.pop()
 							);
 						}
-
-						uno_players.add_loser(`${uno_players.current_user.id}`);
+						if (uno_players.current_player.pizza > 0) {
+							uno_players.current_player.pizza--
+							await game_channel.send(`${uno_players.current_user} has resurrected by the power of pizza! (${uno_players.current_player.pizza} remaining)`)
+						}
+						else {
+							uno_players.add_loser(`${uno_players.current_user.id}`);
+						}
 						// console.log(uno_players);
 					}
 					currently_inactive_discard_pile =
@@ -307,6 +326,7 @@ module.exports = {
 							`## Congratulations to ${uno_players.winners_list[0].user} for winning!`
 						);
 						message_collector.stop();
+						hand_collect_reply_fn = null
 						return;
 					}
 					if (uno_players.length == 1) {
@@ -314,6 +334,7 @@ module.exports = {
 							`## Congratulations to ${uno_players[0].user} for winning!`
 						);
 						message_collector.stop();
+						hand_collect_reply_fn = null
 						return;
 					}
 					uno_players.step();
@@ -694,6 +715,7 @@ module.exports = {
 					);
 				}
 				await end_turn();
+
 			});
 		} else {
 			// Game closed due to inactivity

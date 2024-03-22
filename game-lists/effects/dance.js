@@ -26,7 +26,7 @@ function shuffle(array) {
 
 	return array;
 }
-const SECONDS = 14;
+const SECONDS = 18;
 const dance_length = 10;
 module.exports = {
 	name: `da`,

@@ -159,6 +159,8 @@ class Player {
 		this.uno_callable = false; // boolean
 		this.towers = [];
 		this.character;
+		this.pizza = 1
+		this.drawpile;
 	}
 	/**
 	 * Returns the player's user ID.
@@ -166,13 +168,22 @@ class Player {
 	get id() {
 		return this.user.id;
 	}
+	async steal(player) {
+		if (player.pizza <= 0) {
+			await player.draw(player.drawpile, 1)
+			return
+		}
+		this.pizza++
+		player.pizza--
+		return this
+	}
 	/**
 	 * Makes the player draw a certain number of cards.
 	 * @param {DrawPile} drawpile Which DrawPile should the player draw from?
 	 * @param {Number} number How many cards does the player draw? (Default: 1)
 	 * @returns
 	 */
-	async draw(drawpile, number = 1) {
+	async draw(drawpile = this.drawpile, number = 1) {
 		const cards_drawn = [];
 		for (let i = 0; i < number; i++) {
 			cards_drawn.push(drawpile.draw(this));

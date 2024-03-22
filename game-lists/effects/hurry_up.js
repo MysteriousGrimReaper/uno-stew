@@ -5,7 +5,7 @@ module.exports = {
 	text: `Hurry Up!`,
 	async effect({ uno_players }) {
 		await uno_players.game_channel.send(
-			`**Hurry Up!** You have 7 seconds to place your cards.`
+			`# **Hurry Up!** You have 7 seconds to place your cards.`
 		);
 		let current_turn_index = uno_players.current_turn_index;
 		let seconds_elapsed = 0;
