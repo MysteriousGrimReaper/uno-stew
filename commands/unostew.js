@@ -3,18 +3,19 @@
 const DEBUG_DECK = true;
 const fs = require("fs");
 const path = require("path");
-const dir = `C:/Users/A/Documents/GitHub/uno-stew/uno-stew`;
-const signup_path = path.join(dir, `/tools/signup.js`);
-const stew_path = path.join(dir, `/game-lists/stew`);
+const signup_path = `..//tools/signup.js`;
+const stew_path = `..//game-lists`;
 const { create_signup } = require(signup_path);
 const { deck } = require(DEBUG_DECK
 	? path.join(stew_path, `/cards.json`)
 	: path.join(stew_path, `/default_cards.json`));
-const effects_path = path.join(stew_path, `/effects`);
+const uno_stew_path = `../uno-stew/game-lists`;
+const effects_path = path.join(uno_stew_path, `/effects`);
+const small_effects_path = path.join(stew_path, `/effects`);
 const effect_folder = fs.readdirSync(effects_path);
 const effect_list = [];
 for (const effect_file of effect_folder) {
-	const filePath = path.join(effects_path, effect_file);
+	const filePath = path.join(small_effects_path, effect_file);
 	const effect = require(filePath);
 	effect_list.push(effect);
 }
@@ -24,7 +25,6 @@ for (const effect_file of effect_folder) {
 const effect_names = effect_list.map((eff) => eff.name);
 const effect_texts = effect_list.map((eff) => eff.text);
 const wait = require("node:timers/promises").setTimeout;
-
 // console.log(effect_names);
 const {
 	SlashCommandBuilder,
@@ -307,14 +307,14 @@ module.exports = {
 					}
 					if (uno_players.winners_list.length > 0) {
 						await game_channel.send(
-							`## Congratulations to ${uno_players.winners_list[0].user} for winning! As a reward, have some delicious **chocolate**! 🍫`
+							`## Congratulations to ${uno_players.winners_list[0].user} for winning!`
 						);
 						message_collector.stop();
 						return;
 					}
 					if (uno_players.length == 1) {
 						await game_channel.send(
-							`## Congratulations to ${uno_players[0].user} for winning! As a reward, have some delicious **chocolate**! 🍫`
+							`## Congratulations to ${uno_players[0].user} for winning!`
 						);
 						message_collector.stop();
 						return;
@@ -329,7 +329,21 @@ module.exports = {
 										uno_players.current_user
 								  }'s turn! Dish **${
 										currently_inactive_discard_pile + 1
-								  }** is inactive.`
+								  }** is inactive.\n${drawpile.discardpiles
+										.map((dp, index) => {
+											return {
+												name: `Dish ${index + 1}`,
+												value: `${dp.top_card.emoji} ${
+													dp.top_card.text
+												} ${
+													!dp.active
+														? ` (inactive)`
+														: ``
+												}`,
+											};
+										})
+										.map((d) => `${d.name}: **${d.value}**`)
+										.join(`\n`)}`
 						}`,
 						components: [game_row],
 					});
