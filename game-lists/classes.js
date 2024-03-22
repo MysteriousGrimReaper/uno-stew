@@ -1,6 +1,9 @@
 const path = require("path");
+<<<<<<< HEAD:game-lists/stew/classes.js
 const dir = `C:/Users/A/Documents/GitHub/uno-stew/uno-stew`;
 const stew_path = path.join(dir, `/game-lists/stew`);
+=======
+>>>>>>> 7fbfd91146bb9de506d33a2297b5b13623444f21:game-lists/classes.js
 const wait = require("node:timers/promises").setTimeout;
 const {
 	color_map,
@@ -8,7 +11,7 @@ const {
 	emoji_map,
 	special_emoji_map,
 	color_keys,
-} = require(path.join(stew_path, `/maps.js`));
+} = require(`./maps.js`);
 /**
  * Shuffles the array.
  * @param {Array} array
@@ -135,6 +138,9 @@ class CardFace {
 	 */
 	get text() {
 		let card_text = ``;
+		if (!this.color) {
+			return ``
+		}
 		const color_name = color_map.get(this.color) ?? this.color;
 		card_text += `${color_name} ` ?? ``;
 		const icon_name = icon_map.get(this.icon) ?? this.icon;
@@ -194,6 +200,7 @@ class Player {
 	 * @param {DiscardPile} discardpile The discard pile to play the card on.
 	 */
 	play(card, discardpile) {
+		card.player = this
 		discardpile.push(this.hand.remove_card(card));
 
 		if (this.hand.length == 1) {
@@ -519,6 +526,10 @@ class PlayerManager extends Array {
 	 */
 	reverse() {
 		this.play_direction *= -1;
+		if (this.length == 2) {
+			this.step()
+		}
+		return this
 	}
 	/**
 	 * Returns all the users

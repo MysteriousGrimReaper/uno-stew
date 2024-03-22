@@ -9,9 +9,15 @@ const { create_signup } = require(signup_path);
 const { deck } = require(DEBUG_DECK
 	? path.join(stew_path, `/cards.json`)
 	: path.join(stew_path, `/default_cards.json`));
+<<<<<<< HEAD
 const uno_stew_path = `../uno-stew/game-lists`;
 const effects_path = path.join(uno_stew_path, `/effects`);
 const small_effects_path = path.join(stew_path, `/effects`);
+=======
+const uno_stew_path = `../uno-stew/game-lists`
+const effects_path = path.join(uno_stew_path, `/effects`);
+const small_effects_path = path.join(stew_path, `/effects`)
+>>>>>>> 7fbfd91146bb9de506d33a2297b5b13623444f21
 const effect_folder = fs.readdirSync(effects_path);
 const effect_list = [];
 for (const effect_file of effect_folder) {

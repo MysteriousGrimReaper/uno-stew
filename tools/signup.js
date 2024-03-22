@@ -228,7 +228,7 @@ module.exports = {
 					collector.on("end", () => {
 						if (player_list.length >= min_players) {
 							signup_message.edit({
-								embeds: [start_game_embed()],
+								embeds: [start_game_embed(), ...rules],
 								components: [],
 							});
 							if (submissions_list.length > 0) {
