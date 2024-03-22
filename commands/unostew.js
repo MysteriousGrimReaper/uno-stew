@@ -3,18 +3,19 @@
 const DEBUG_DECK = true;
 const fs = require("fs");
 const path = require("path");
-const dir = `C:/Users/gooda/Documents/GitHub/uno-stew`;
-const signup_path = path.join(dir, `/tools/signup.js`);
-const stew_path = path.join(dir, `/game-lists/stew`);
+const signup_path = `..//tools/signup.js`;
+const stew_path = `..//game-lists`;
 const { create_signup } = require(signup_path);
 const { deck } = require(DEBUG_DECK
 	? path.join(stew_path, `/cards.json`)
 	: path.join(stew_path, `/default_cards.json`));
-const effects_path = path.join(stew_path, `/effects`);
+const uno_stew_path = `../uno-stew/game-lists`
+const effects_path = path.join(uno_stew_path, `/effects`);
+const small_effects_path = path.join(stew_path, `/effects`)
 const effect_folder = fs.readdirSync(effects_path);
 const effect_list = [];
 for (const effect_file of effect_folder) {
-	const filePath = path.join(effects_path, effect_file);
+	const filePath = path.join(small_effects_path, effect_file);
 	const effect = require(filePath);
 	effect_list.push(effect);
 }

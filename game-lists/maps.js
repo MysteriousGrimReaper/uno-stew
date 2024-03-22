@@ -1,10 +1,10 @@
 const fs = require("fs");
 const path = require("path");
-const dir = `C:/Users/gooda/Documents/GitHub/uno-stew/`;
-const effects_path = path.join(dir, `game-lists/stew/effects`);
+const effects_path = path.join(`../game-lists/`, `effects/`);
+const uno_effects_path = `../uno-stew/game-lists/effects/`
 const icon_map = new Map();
 
-const effect_folder = fs.readdirSync(effects_path);
+const effect_folder = fs.readdirSync(uno_effects_path);
 const effect_list = [];
 const effect_names = [];
 for (const effect_file of effect_folder) {

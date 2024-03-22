@@ -1,6 +1,4 @@
 const path = require("path");
-const dir = `C:/Users/gooda/Documents/GitHub/uno-stew`;
-const stew_path = path.join(dir, `/game-lists/stew`);
 const wait = require("node:timers/promises").setTimeout;
 const {
 	color_map,
@@ -8,7 +6,7 @@ const {
 	emoji_map,
 	special_emoji_map,
 	color_keys,
-} = require(path.join(stew_path, `/maps.js`));
+} = require(`./maps.js`);
 /**
  * Shuffles the array.
  * @param {Array} array
