@@ -24,6 +24,7 @@ for (const effect_file of effect_folder) {
 const effect_names = effect_list.map((eff) => eff.name);
 const effect_texts = effect_list.map((eff) => eff.text);
 const wait = require("node:timers/promises").setTimeout;
+
 // console.log(effect_names);
 const {
 	SlashCommandBuilder,
@@ -47,7 +48,11 @@ let hand_collect_reply_fn;
 const get_hand_collect_reply_fn_stew = () => {
 	return hand_collect_reply_fn;
 };
-const rules_embed = new EmbedBuilder().setTitle(`Uno Stew Rules`);
+const rules_embed = new EmbedBuilder()
+	.setTitle(`Uno Stew Rules`)
+	.setDescription(
+		`https://docs.google.com/document/d/12rInO_Mjnqw0bTIJEw06MAQrpqNmvr-W6N5-pd95UnM/edit?usp=sharing`
+	);
 module.exports = {
 	get_hand_collect_reply_fn_stew,
 	data: new SlashCommandBuilder()
@@ -302,14 +307,14 @@ module.exports = {
 					}
 					if (uno_players.winners_list.length > 0) {
 						await game_channel.send(
-							`## Congratulations to ${uno_players.winners_list[0].user} for winning!`
+							`## Congratulations to ${uno_players.winners_list[0].user} for winning! As a reward, have some delicious **chocolate**! 🍫`
 						);
 						message_collector.stop();
 						return;
 					}
 					if (uno_players.length == 1) {
 						await game_channel.send(
-							`## Congratulations to ${uno_players[0].user} for winning!`
+							`## Congratulations to ${uno_players[0].user} for winning! As a reward, have some delicious **chocolate**! 🍫`
 						);
 						message_collector.stop();
 						return;
