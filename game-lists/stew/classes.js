@@ -135,6 +135,9 @@ class CardFace {
 	 */
 	get text() {
 		let card_text = ``;
+		if (!this.color) {
+			return ``
+		}
 		const color_name = color_map.get(this.color) ?? this.color;
 		card_text += `${color_name} ` ?? ``;
 		const icon_name = icon_map.get(this.icon) ?? this.icon;
@@ -194,6 +197,7 @@ class Player {
 	 * @param {DiscardPile} discardpile The discard pile to play the card on.
 	 */
 	play(card, discardpile) {
+		card.player = this
 		discardpile.push(this.hand.remove_card(card));
 
 		if (this.hand.length == 1) {
@@ -520,6 +524,10 @@ class PlayerManager extends Array {
 	 */
 	reverse() {
 		this.play_direction *= -1;
+		if (this.length == 2) {
+			this.step()
+		}
+		return this
 	}
 	/**
 	 * Returns all the users
