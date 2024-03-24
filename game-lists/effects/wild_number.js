@@ -6,19 +6,14 @@ module.exports = {
 			content: `Choose a number to set this card's value to.`,
 		});
 		const wild_number_promise = new Promise((resolve) => {
-			const filter = (m) => m.author.id === player.user.id; // Only collect messages from the author of the command
+			const filter = (m) => m.author.id === player.user.id && !((parseInt(m.content) < 0 && parseInt(m.content) != -10) ||
+			parseInt(m.content) > 23); // Only collect messages from the author of the command
 			const collector = uno_players.game_channel.createMessageCollector({
 				filter,
 				time: 60000,
+				max: 1
 			});
 			collector.on("collect", async (collectedMessage) => {
-				const number = collectedMessage.content;
-				if (
-					(parseInt(number) < 0 && parseInt(number) != -10) ||
-					parseInt(number) > 23
-				) {
-					return;
-				}
 				pile_chosen.top_card.icon = number;
 				console.log(pile_chosen.top_card);
 				await uno_players.game_channel.send(

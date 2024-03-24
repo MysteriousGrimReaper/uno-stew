@@ -1,6 +1,7 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 /* eslint-disable no-case-declarations */
 const DEBUG_DECK = true;
+const currently_playing_channels = []
 const fs = require("fs");
 const path = require("path");
 const signup_path = `..//tools/signup.js`;
@@ -60,6 +61,11 @@ module.exports = {
 		.setName("unostew")
 		.setDescription("Starts a game of Uno Stew."),
 	async execute(interaction) {
+		if (currently_playing_channels.includes(interaction.channel.id)) {
+			interaction.reply({ephemeral: true, content: `There's currently an ongoing game in this channel!`})
+			return
+		}
+		currently_playing_channels.push(interaction.channel.id)
 		const game_channel = interaction.channel;
 		const player_list = await create_signup({
 			interaction,
@@ -205,7 +211,21 @@ module.exports = {
 			);
 			// update this to be an embed
 			await game_channel.send({
-				content: `The first cards are:\n${drawpile.discard_pile_text}.\nIt is now ${uno_players.current_user}'s turn!`,
+				content: `The first cards are:\n${drawpile.discardpiles
+					.map((dp, index) => {
+						return {
+							name: `Dish ${index + 1}`,
+							value: `${dp.top_card.emoji} ${
+								dp.top_card.text
+							} ${
+								!dp.active
+									? ` (inactive)`
+									: ``
+							}`,
+						};
+					})
+					.map((d) => `${d.name}: **${d.value}**`)
+					.join(`\n`)}.\nIt is now ${uno_players.current_user}'s turn!`,
 				components: [game_row],
 			});
 			// read messages
@@ -215,7 +235,6 @@ module.exports = {
 				cooldown = false
 			})
 			message_collector.on(`collect`, async () => {
-				cooldown = true
 				await wait(cooldown_timer * 1000)
 				cooldown = false
 			})
@@ -223,6 +242,7 @@ module.exports = {
 				if (cooldown) {
 					return
 				}
+				cooldown = true
 				if (
 					message.author.id == `315495597874610178` &&
 					message.content == `stop!`
@@ -327,7 +347,7 @@ module.exports = {
 					}
 					if (uno_players.winners_list.length > 0) {
 						await game_channel.send(
-							`## Congratulations to ${uno_players.winners_list[0].user} for winning!`
+							`## Congratulations to ${uno_players.winners_list[0].user} for winning!\nHave some chocolate! :chocolate_bar:`
 						);
 						message_collector.stop();
 						hand_collect_reply_fn = null
@@ -335,7 +355,7 @@ module.exports = {
 					}
 					if (uno_players.length == 1) {
 						await game_channel.send(
-							`## Congratulations to ${uno_players[0].user} for winning!`
+							`## Congratulations to ${uno_players[0].user} for winning!\nHave some chocolate! :chocolate_bar:`
 						);
 						message_collector.stop();
 						hand_collect_reply_fn = null
@@ -727,6 +747,12 @@ module.exports = {
 				await end_turn();
 
 			});
+			message_collector.on(`end`, () => {
+				const channel_index = currently_playing_channels.indexOf(interaction.channel.id)
+				if (channel_index > -1) {
+					currently_playing_channels.splice(channel_index, 1)
+				}
+			})
 		} else {
 			// Game closed due to inactivity
 		}
