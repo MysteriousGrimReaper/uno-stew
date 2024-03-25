@@ -1,7 +1,7 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 /* eslint-disable no-case-declarations */
 const DEBUG_DECK = true;
-const currently_playing_channels = []
+const currently_playing_channels = [];
 const fs = require("fs");
 const path = require("path");
 const signup_path = `..//tools/signup.js`;
@@ -26,6 +26,7 @@ for (const effect_file of effect_folder) {
  */
 const effect_names = effect_list.map((eff) => eff.name);
 const effect_texts = effect_list.map((eff) => eff.text);
+console.log(effect_names.join(`\n'`));
 const wait = require("node:timers/promises").setTimeout;
 // console.log(effect_names);
 const {
@@ -62,10 +63,13 @@ module.exports = {
 		.setDescription("Starts a game of Uno Stew."),
 	async execute(interaction) {
 		if (currently_playing_channels.includes(interaction.channel.id)) {
-			interaction.reply({ephemeral: true, content: `There's currently an ongoing game in this channel!`})
-			return
+			interaction.reply({
+				ephemeral: true,
+				content: `There's currently an ongoing game in this channel!`,
+			});
+			return;
 		}
-		currently_playing_channels.push(interaction.channel.id)
+		currently_playing_channels.push(interaction.channel.id);
 		const game_channel = interaction.channel;
 		const player_list = await create_signup({
 			interaction,
@@ -114,7 +118,7 @@ module.exports = {
 			};
 			uno_players.forEach((player) => {
 				player.draw(drawpile, 7);
-				player.drawpile = drawpile
+				player.drawpile = drawpile;
 				player.user.send(`Your hand:\n${player.hand.text}`);
 			});
 			drawpile.discard(0);
@@ -184,7 +188,9 @@ module.exports = {
 									(p) =>
 										`## ${
 											p.user.globalName ?? p.user.username
-										} ${`🍕`.repeat(p.pizza)}\n${p.hand.back_text}`
+										} ${`🍕`.repeat(p.pizza)}\n${
+											p.hand.back_text
+										}`
 								)
 								.join(
 									`\n`
@@ -215,34 +221,32 @@ module.exports = {
 					.map((dp, index) => {
 						return {
 							name: `Dish ${index + 1}`,
-							value: `${dp.top_card.emoji} ${
-								dp.top_card.text
-							} ${
-								!dp.active
-									? ` (inactive)`
-									: ``
+							value: `${dp.top_card.emoji} ${dp.top_card.text} ${
+								!dp.active ? ` (inactive)` : ``
 							}`,
 						};
 					})
 					.map((d) => `${d.name}: **${d.value}**`)
-					.join(`\n`)}.\nIt is now ${uno_players.current_user}'s turn!`,
+					.join(`\n`)}.\nIt is now ${
+					uno_players.current_user
+				}'s turn!`,
 				components: [game_row],
 			});
 			// read messages
-			let cooldown = false
-			const cooldown_timer = 0.5
+			let cooldown = false;
+			const cooldown_timer = 0.5;
 			message_collector.on(`ignore`, () => {
-				cooldown = false
-			})
+				cooldown = false;
+			});
 			message_collector.on(`collect`, async () => {
-				await wait(cooldown_timer * 1000)
-				cooldown = false
-			})
+				await wait(cooldown_timer * 1000);
+				cooldown = false;
+			});
 			message_collector.on(`collect`, async (message) => {
 				if (cooldown) {
-					return
+					return;
 				}
-				cooldown = true
+				cooldown = true;
 				if (
 					message.author.id == `315495597874610178` &&
 					message.content == `stop!`
@@ -321,17 +325,23 @@ module.exports = {
 						await game_channel.send(
 							`${uno_players.current_user} has perished to the stew... (25 or more cards)`
 						);
-						while (uno_players.current_player.hand.length > (uno_players.current_player.pizza > 0 ? 7 : 0)) {
+						while (
+							uno_players.current_player.hand.length >
+							(uno_players.current_player.pizza > 0 ? 7 : 0)
+						) {
 							drawpile.unshift(
 								uno_players.current_player.hand.pop()
 							);
 						}
 						if (uno_players.current_player.pizza > 0) {
-							uno_players.current_player.pizza--
-							await game_channel.send(`${uno_players.current_user} has resurrected by the power of pizza! (${uno_players.current_player.pizza} remaining)`)
-						}
-						else {
-							uno_players.add_loser(`${uno_players.current_user.id}`);
+							uno_players.current_player.pizza--;
+							await game_channel.send(
+								`${uno_players.current_user} has resurrected by the power of pizza! (${uno_players.current_player.pizza} remaining)`
+							);
+						} else {
+							uno_players.add_loser(
+								`${uno_players.current_user.id}`
+							);
 						}
 						// console.log(uno_players);
 					}
@@ -350,7 +360,7 @@ module.exports = {
 							`## Congratulations to ${uno_players.winners_list[0].user} for winning!\nHave some chocolate! :chocolate_bar:`
 						);
 						message_collector.stop();
-						hand_collect_reply_fn = null
+						hand_collect_reply_fn = null;
 						return;
 					}
 					if (uno_players.length == 1) {
@@ -358,7 +368,7 @@ module.exports = {
 							`## Congratulations to ${uno_players[0].user} for winning!\nHave some chocolate! :chocolate_bar:`
 						);
 						message_collector.stop();
-						hand_collect_reply_fn = null
+						hand_collect_reply_fn = null;
 						return;
 					}
 					uno_players.step();
@@ -745,14 +755,15 @@ module.exports = {
 					);
 				}
 				await end_turn();
-
 			});
 			message_collector.on(`end`, () => {
-				const channel_index = currently_playing_channels.indexOf(interaction.channel.id)
+				const channel_index = currently_playing_channels.indexOf(
+					interaction.channel.id
+				);
 				if (channel_index > -1) {
-					currently_playing_channels.splice(channel_index, 1)
+					currently_playing_channels.splice(channel_index, 1);
 				}
-			})
+			});
 		} else {
 			// Game closed due to inactivity
 		}

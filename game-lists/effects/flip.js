@@ -7,8 +7,6 @@ module.exports = {
 			p.user.send(`Your new hand:\n${p.hand.text}`);
 		});
 		uno_players.drawpile.flip();
-		await uno_players.game_channel.send(
-			`All cards have been flipped! The top cards are: \n${uno_players.drawpile.discard_pile_text}`
-		);
+		await uno_players.game_channel.send(`All cards have been flipped!`);
 	},
 };

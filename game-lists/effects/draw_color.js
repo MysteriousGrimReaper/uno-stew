@@ -21,7 +21,6 @@ for (const value of color_map.values()) {
 module.exports = {
 	name: `+c`,
 	text: `Draw Color`,
-	draw_stackable: true,
 	async effect({ uno_players, player }) {
 		await uno_players.game_channel.send({
 			content: `Choose a color for the next player to draw.`,

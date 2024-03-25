@@ -46,7 +46,7 @@ module.exports = {
 					);
 				const cards_drawn = [];
 				while (
-					cards_drawn[0].color != color &&
+					cards_drawn[0]?.color != color &&
 					color_map.get(cards_drawn[0]?.color) != color
 				) {
 					cards_drawn.unshift(uno_players.drawpile.pop());
