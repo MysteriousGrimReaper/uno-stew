@@ -561,10 +561,10 @@ module.exports = {
 						return;
 					}
 					if (
-						!(
-							card_chosen.icon == current_card.icon &&
-							card_chosen.color == current_card.color
-						)
+						!card_chosen.playable_on({
+							card: pile_chosen.top_card,
+							jump_in: true,
+						})
 					) {
 						await game_channel.send(
 							`${player.user} jumped in with the wrong card... draw 1 card.`
@@ -681,44 +681,11 @@ module.exports = {
 				}
 
 				// check if card is valid
-				const wild_flag =
-					current_card.color == `w` || card_chosen.color == `w`;
-				const color_flag = current_card.color == card_chosen.color;
-				const icon_flag = current_card.icon == card_chosen.icon;
-				// to-do: find some way to determine whether these things appear on a modifier instead
-				const draw_stack_flag = [card_chosen.icon].find((symbol) => {
-					if (
-						[current_card.icon, ...current_card.modifiers].filter(
-							(n) => /^\+\d+/.test(n)
-						).length == 0
-					) {
-						return false;
-					}
-					function compare_draw(a, b) {
-						const value_a = parseInt(a.slice(1));
-						const value_b = parseInt(b.slice(1));
-						return value_a >= value_b;
-					}
-					return (
-						effect_list[effect_names.indexOf(symbol)]
-							?.draw_stackable &&
-						(!/^\+\d+/.test(symbol) ||
-							compare_draw(symbol, current_card.icon))
-					);
-				});
-				const card_match_bypass = [card_chosen.icon].find(
-					(symbol) =>
-						effect_list[effect_names.indexOf(symbol)]
-							?.card_match_bypass
-				);
 				if (
-					!(
-						wild_flag ||
-						color_flag ||
-						icon_flag ||
-						card_match_bypass ||
-						draw_stack_flag
-					)
+					!card_chosen.playable_on({
+						card: pile_chosen.top_card,
+						effect_list,
+					})
 				) {
 					await game_channel.send(
 						`That card cannot be placed there.`

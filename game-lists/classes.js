@@ -93,18 +93,31 @@ class Card {
 	 * @param {Card} card
 	 * @returns true if the card is playable
 	 */
-	playable_on({ card, jump_in = false }) {
+	playable_on({ card, jump_in = false, effect_list }) {
+		const card_match_bypass =
+			effect_list[
+				effect_list.map((effect) => effect.name).indexOf(this.icon)
+			]?.card_match_bypass;
 		const clear_flag = this.icon == `cl`;
 		const wild_match = card.color == `w` || this.color == `w`;
 		const color_match = card.color == this.color;
 		const icon_match = card.icon == this.icon;
 		const jump_in_flag = color_match && icon_match && jump_in;
 		const normal_flag = wild_match || color_match || icon_match;
+		let wild_number_change_flag = false;
+		if (!normal_flag && this.icon == `wn` && !isNaN(parseInt(card.icon))) {
+			this.icon = card.icon;
+			wild_number_change_flag = true;
+		}
 		const draw_flag =
 			parseInt(this.icon.slice(1)) >= parseInt(card.icon.slice(1));
-		return (
-			(jump_in ? jump_in_flag : normal_flag) || draw_flag || clear_flag
-		);
+		return jump_in
+			? jump_in_flag
+			: normal_flag ||
+					draw_flag ||
+					clear_flag ||
+					wild_number_change_flag ||
+					card_match_bypass;
 	}
 }
 /**
