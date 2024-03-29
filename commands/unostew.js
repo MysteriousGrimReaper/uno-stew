@@ -2,6 +2,8 @@
 /* eslint-disable no-case-declarations */
 const DEBUG_DECK = true;
 const currently_playing_channels = [];
+const { QuickDB } = require("quick.db");
+const db = new QuickDB();
 const fs = require("fs");
 const path = require("path");
 const signup_path = `..//tools/signup.js`;
@@ -359,6 +361,15 @@ module.exports = {
 						await game_channel.send(
 							`## Congratulations to ${uno_players.winners_list[0].user} for winning!\nHave some chocolate! :chocolate_bar:`
 						);
+						await db.set(
+							`${uno_players.winners_list[0].user.id}.name`,
+							uno_players.winners_list[0].user.globalName ??
+								uno_players.winners_list[0].user.username
+						);
+						await db.add(
+							`${uno_players.winners_list[0].user.id}.wins`,
+							1
+						);
 						message_collector.stop();
 						hand_collect_reply_fn = null;
 						return;
@@ -366,6 +377,15 @@ module.exports = {
 					if (uno_players.length == 1) {
 						await game_channel.send(
 							`## Congratulations to ${uno_players[0].user} for winning!\nHave some chocolate! :chocolate_bar:`
+						);
+						await db.set(
+							`${uno_players[0].user}.name`,
+							uno_players[0].user.globalName ??
+								uno_players[0].user.username
+						);
+						await db.add(
+							`${uno_players.winners_list[0].user.id}.wins`,
+							1
 						);
 						message_collector.stop();
 						hand_collect_reply_fn = null;

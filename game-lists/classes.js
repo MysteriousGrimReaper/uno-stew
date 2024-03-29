@@ -1,3 +1,4 @@
+/* eslint-disable no-mixed-spaces-and-tabs */
 const wait = require("node:timers/promises").setTimeout;
 const {
 	color_map,
@@ -57,6 +58,9 @@ class Card {
 	get color() {
 		return this.front.color;
 	}
+	get flex() {
+		return this.front.flex;
+	}
 	get icon() {
 		return this.front.icon;
 	}
@@ -90,6 +94,22 @@ class Card {
 	get back_text() {
 		return this.back.text;
 	}
+	/**
+	 * Check if this card is playable on a given card.
+	 * @param {Card} card
+	 */
+	playable_on(card) {
+		const wild_match = card.color == `w` || this.color == `w`;
+		const color_match = card.color == this.color;
+		const icon_match = card.icon == this.icon;
+		const is_draw = /^\+\d+/.test(this.icon);
+		const target_is_draw = /^\+\d+/.test(card.icon);
+		let draw_stackable = false;
+		if (is_draw && target_is_draw) {
+			draw_stackable =
+				parseInt(this.icon.slice(1)) >= parseInt(card.icon.slice(1));
+		}
+	}
 }
 /**
  * Represents a card's face.
@@ -102,6 +122,18 @@ class CardFace {
 		this.modifiers = modifiers ?? []; // what modifiers(s) the card has (array)
 		this.icon = icon ?? ``; // card number or symbol (string)
 		this.color = color; // card colour (string)
+		const possible_flex_color_array = color_keys.toSpliced(
+			color_keys.indexOf(color),
+			1
+		);
+		this.flex =
+			Math.random() < 0.1
+				? possible_flex_color_array[
+						Math.floor(
+							Math.random() * possible_flex_color_array.length
+						)
+				  ]
+				: false;
 		this.wild_colors =
 			this.color == `w`
 				? shuffleArray(color_keys.filter((c) => c != `w`)).slice(6)
@@ -158,7 +190,7 @@ class Player {
 		this.uno_callable = false; // boolean
 		this.towers = [];
 		this.character;
-		this.pizza = 1
+		this.pizza = 1;
 		this.drawpile;
 	}
 	/**
@@ -169,12 +201,12 @@ class Player {
 	}
 	async steal(player) {
 		if (player.pizza <= 0) {
-			await player.draw(player.drawpile, 1)
-			return
+			await player.draw(player.drawpile, 1);
+			return;
 		}
-		this.pizza++
-		player.pizza--
-		return this
+		this.pizza++;
+		player.pizza--;
+		return this;
 	}
 	/**
 	 * Makes the player draw a certain number of cards.
