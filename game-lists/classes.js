@@ -93,22 +93,18 @@ class Card {
 	 * @param {Card} card
 	 * @returns true if the card is playable
 	 */
-	playable_on(card, jump_in = false) {
-		if (this.icon == `cl`) {
-			return true;
-		}
+	playable_on({ card, jump_in = false }) {
+		const clear_flag = this.icon == `cl`;
 		const wild_match = card.color == `w` || this.color == `w`;
 		const color_match = card.color == this.color;
 		const icon_match = card.icon == this.icon;
 		const jump_in_flag = color_match && icon_match && jump_in;
 		const normal_flag = wild_match || color_match || icon_match;
-		const is_draw = /^\+\d+$/.test(this.icon);
-		const target_is_draw = /^\+\d+$/.test(card.icon);
-		let draw_stackable = false;
-		if (is_draw && target_is_draw) {
-			draw_stackable =
-				parseInt(this.icon.slice(1)) >= parseInt(card.icon.slice(1));
-		}
+		const draw_flag =
+			parseInt(this.icon.slice(1)) >= parseInt(card.icon.slice(1));
+		return (
+			(jump_in ? jump_in_flag : normal_flag) || draw_flag || clear_flag
+		);
 	}
 }
 /**

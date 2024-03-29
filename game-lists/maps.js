@@ -59,9 +59,9 @@ emoji_map.set("y", "🍋");
 emoji_map.set("m", "🍇");
 emoji_map.set("p", "🍑");
 emoji_map.set("o", "🍊");
-emoji_map.set("s", "🧄");
+emoji_map.set("s", "🥛");
 emoji_map.set("a", "🥐");
-emoji_map.set("i", "🥚");
+emoji_map.set("i", "🧄");
 emoji_map.set("w", "🍨");
 exports.emoji_map = emoji_map;
 
