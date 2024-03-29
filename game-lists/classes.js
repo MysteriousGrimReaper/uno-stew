@@ -1,12 +1,6 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const wait = require("node:timers/promises").setTimeout;
-const {
-	color_map,
-	icon_map,
-	emoji_map,
-	special_emoji_map,
-	color_keys,
-} = require(`./maps.js`);
+const { color_map, icon_map, emoji_map, color_keys } = require(`./maps.js`);
 /**
  * Shuffles the array.
  * @param {Array} array
@@ -97,13 +91,19 @@ class Card {
 	/**
 	 * Check if this card is playable on a given card.
 	 * @param {Card} card
+	 * @returns true if the card is playable
 	 */
-	playable_on(card) {
+	playable_on(card, jump_in = false) {
+		if (this.icon == `cl`) {
+			return true;
+		}
 		const wild_match = card.color == `w` || this.color == `w`;
 		const color_match = card.color == this.color;
 		const icon_match = card.icon == this.icon;
-		const is_draw = /^\+\d+/.test(this.icon);
-		const target_is_draw = /^\+\d+/.test(card.icon);
+		const jump_in_flag = color_match && icon_match && jump_in;
+		const normal_flag = wild_match || color_match || icon_match;
+		const is_draw = /^\+\d+$/.test(this.icon);
+		const target_is_draw = /^\+\d+$/.test(card.icon);
 		let draw_stackable = false;
 		if (is_draw && target_is_draw) {
 			draw_stackable =
@@ -138,9 +138,7 @@ class CardFace {
 			this.color == `w`
 				? shuffleArray(color_keys.filter((c) => c != `w`)).slice(6)
 				: [];
-		this.emoji = /^\d+$/.test(icon)
-			? emoji_map.get(this.color)
-			: special_emoji_map.get(this.color);
+		this.emoji = emoji_map.get(this.color);
 		// r: red
 		// b: blue
 		// g: green
