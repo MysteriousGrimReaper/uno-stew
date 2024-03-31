@@ -121,8 +121,11 @@ module.exports = {
 			uno_players.forEach((player) => {
 				player.draw(drawpile, 7);
 				player.drawpile = drawpile;
-				player.user.send(`Your hand:\n${player.hand.text}`);
+				player.user.send(
+					`Your hand:\n${player.hand.text(uno_players)}`
+				);
 			});
+			uno_players.effect_list = effect_list;
 			drawpile.discard(0);
 			drawpile.discard(1);
 			drawpile.discard(2);
@@ -153,7 +156,7 @@ module.exports = {
 									: 0xdd0000
 							)
 							.setTitle(`Your hand (${player.hand.length}):`)
-							.setDescription(player.hand.text);
+							.setDescription(player.hand.text(uno_players));
 						await i.reply({
 							embeds: [hand_embed],
 							ephemeral: true,
@@ -250,7 +253,7 @@ module.exports = {
 				}
 				cooldown = true;
 				if (
-					message.author.id == `315495597874610178` &&
+					message.author.id == interaction.user.id &&
 					message.content == `stop!`
 				) {
 					message_collector.stop();
@@ -474,7 +477,7 @@ module.exports = {
 				// check your hand
 				if (message.content == `hand`) {
 					message.author.send({
-						content: `Your hand:\n${player.hand.text}`,
+						content: `Your hand:\n${player.hand.text(uno_players)}`,
 						ephemeral: true,
 					});
 					return;

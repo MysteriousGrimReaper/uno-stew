@@ -82,42 +82,30 @@ class Card {
 	get text() {
 		return this.front.text;
 	}
-	get hand_text() {
-		return this.front.hand_text;
+	hand_text(player_manager) {
+		const playable = this.playable_piles(player_manager).reduce(
+			(acc, cv) => acc || cv,
+			false
+		);
+		return (
+			(playable ? `**` : ``) +
+			this.front.hand_text +
+			(playable ? `**` : ``)
+		);
 	}
 	get back_text() {
 		return this.back.text;
 	}
-	/**
-	 * Check if this card is playable on a given card.
-	 * @param {Card} card
-	 * @returns true if the card is playable
-	 */
-	playable_on({ card, jump_in = false, effect_list }) {
-		const card_match_bypass =
-			effect_list[
-				effect_list.map((effect) => effect.name).indexOf(this.icon)
-			]?.card_match_bypass;
-		const clear_flag = this.icon == `cl`;
-		const wild_match = card.color == `w` || this.color == `w`;
-		const color_match = card.color == this.color;
-		const icon_match = card.icon == this.icon;
-		const jump_in_flag = color_match && icon_match && jump_in;
-		const normal_flag = wild_match || color_match || icon_match;
-		let wild_number_change_flag = false;
-		if (!normal_flag && this.icon == `wn` && !isNaN(parseInt(card.icon))) {
-			this.icon = card.icon;
-			wild_number_change_flag = true;
-		}
-		const draw_flag =
-			parseInt(this.icon.slice(1)) >= parseInt(card.icon.slice(1));
-		return jump_in
-			? jump_in_flag
-			: normal_flag ||
-					draw_flag ||
-					clear_flag ||
-					wild_number_change_flag ||
-					card_match_bypass;
+	playable_on(card, pile_chosen, player_manager, jump_in = false) {
+		return this.front.playable_on({
+			card,
+			pile_chosen,
+			player_manager,
+			jump_in,
+		});
+	}
+	playable_piles(player_manager) {
+		return this.front.playable_piles(player_manager);
 	}
 }
 /**
@@ -127,7 +115,7 @@ class Card {
  * @param {Array} modifiers The modifiers(s) that the card has. All modifierss are strings.
  */
 class CardFace {
-	constructor({ icon, color, modifiers }) {
+	constructor({ icon, color, modifiers, flex = false }) {
 		this.modifiers = modifiers ?? []; // what modifiers(s) the card has (array)
 		this.icon = icon ?? ``; // card number or symbol (string)
 		this.color = color; // card colour (string)
@@ -136,7 +124,7 @@ class CardFace {
 			1
 		);
 		this.flex =
-			Math.random() < 0.1
+			(Math.random() < 0.1 || flex)
 				? possible_flex_color_array[
 						Math.floor(
 							Math.random() * possible_flex_color_array.length
@@ -165,6 +153,43 @@ class CardFace {
 		];
 		this.hand_text = `${this.aliases[1]} (${this.aliases[0]})`;
 	}
+	playable_piles(player_manager) {
+		return player_manager.drawpile.discardpiles.map((dp) =>
+			this.playable_on({ card: dp.top_card })
+		);
+	}
+	/**
+	 * Check if this card is playable on a given card.
+	 * @param {CardFace} card
+	 * @returns true if the card is playable
+	 */
+	playable_on({ card, jump_in = false, player_manager }) {
+		const effect_list = player_manager.effect_list;
+		const card_match_bypass =
+			effect_list[
+				effect_list.map((effect) => effect.name).indexOf(this.icon)
+			]?.card_match_bypass;
+		const clear_flag = this.icon == `cl`;
+		const wild_match = card.color == `w` || this.color == `w`;
+		const color_match = card.color == this.color;
+		const icon_match = card.icon == this.icon;
+		const jump_in_flag = color_match && icon_match && jump_in;
+		const normal_flag = wild_match || color_match || icon_match;
+		let wild_number_change_flag = false;
+		if (!normal_flag && this.icon == `wn` && !isNaN(parseInt(card.icon))) {
+			this.icon = card.icon;
+			wild_number_change_flag = true;
+		}
+		const draw_flag =
+			parseInt(this.icon.slice(1)) >= parseInt(card.icon.slice(1));
+		return jump_in
+			? jump_in_flag
+			: normal_flag ||
+					draw_flag ||
+					clear_flag ||
+					wild_number_change_flag ||
+					card_match_bypass;
+	}
 	/**
 	 *
 	 * @returns The text information of a card.
@@ -182,6 +207,7 @@ class CardFace {
 			this.modifiers.length > 0
 				? ` (+ ${this.modifiers.join(`, `)})`
 				: ``;
+		card_text += this.flex ? `(Flex ${color_map.get(this.flex)})` : ``;
 		return card_text.trim();
 	}
 }
@@ -295,8 +321,10 @@ class Hand extends Array {
 			return card_in_hand.front.aliases.includes(card_text.toLowerCase());
 		});
 	}
-	get text() {
-		return `- ${this.map((card) => card.hand_text).join(`\n- `)}`;
+	text(player_manager) {
+		return `- ${this.map((card) => card.hand_text(player_manager)).join(
+			`\n- `
+		)}`;
 	}
 	get back_text() {
 		return `- ${this.map((card) => card.back_text).join(`\n- `)}`;
@@ -478,6 +506,7 @@ class PlayerManager extends Array {
 		this.winners_list = [];
 		this.losers_list = [];
 		this.attack_counter = 1;
+		this.effect_list = [];
 	}
 	/**
 	 * Dials up the oven (Attack d10).
