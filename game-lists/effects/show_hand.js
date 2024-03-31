@@ -17,7 +17,7 @@ module.exports = {
 					player.hand.length
 				}):`
 			)
-			.setDescription(player.hand.text);
+			.setDescription(player.hand.text(uno_players));
 		await uno_players.game_channel.send({
 			embeds: [hand_embed],
 		});

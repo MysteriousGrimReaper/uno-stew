@@ -96,7 +96,7 @@ class Card {
 	get back_text() {
 		return this.back.text;
 	}
-	playable_on(card, pile_chosen, player_manager, jump_in = false) {
+	playable_on({ card, pile_chosen, player_manager, jump_in = false }) {
 		return this.front.playable_on({
 			card,
 			pile_chosen,
@@ -124,7 +124,7 @@ class CardFace {
 			1
 		);
 		this.flex =
-			(Math.random() < 0.1 || flex)
+			Math.random() < 0.1 || flex
 				? possible_flex_color_array[
 						Math.floor(
 							Math.random() * possible_flex_color_array.length
@@ -163,32 +163,53 @@ class CardFace {
 	 * @param {CardFace} card
 	 * @returns true if the card is playable
 	 */
-	playable_on({ card, jump_in = false, player_manager }) {
+	playable_on({
+		card,
+		jump_in = false,
+		player_manager,
+		current_player_flag,
+	}) {
 		const effect_list = player_manager.effect_list;
-		const card_match_bypass =
-			effect_list[
-				effect_list.map((effect) => effect.name).indexOf(this.icon)
-			]?.card_match_bypass;
+		const effect =
+			effect_list[effect_list.map((e) => e.name).indexOf(this.icon)];
+		const card_match_bypass = effect?.card_match_bypass;
+		const draw_stackable = effect?.draw_stackable;
 		const clear_flag = this.icon == `cl`;
 		const wild_match = card.color == `w` || this.color == `w`;
 		const color_match = card.color == this.color;
 		const icon_match = card.icon == this.icon;
-		const jump_in_flag = color_match && icon_match && jump_in;
+		const jump_in_flag = (color_match && icon_match && jump_in) || !jump_in;
 		const normal_flag = wild_match || color_match || icon_match;
 		let wild_number_change_flag = false;
 		if (!normal_flag && this.icon == `wn` && !isNaN(parseInt(card.icon))) {
 			this.icon = card.icon;
 			wild_number_change_flag = true;
 		}
-		const draw_flag =
+		const draw_number_flag =
 			parseInt(this.icon.slice(1)) >= parseInt(card.icon.slice(1));
-		return jump_in
-			? jump_in_flag
-			: normal_flag ||
-					draw_flag ||
-					clear_flag ||
-					wild_number_change_flag ||
-					card_match_bypass;
+		const draw_state = player_manager.draw_stack > 0;
+		const draw_state_flag = !draw_state || (draw_stackable && draw_state);
+		const ono_99_flag = this.icon == `99`;
+		if (!current_player_flag && !jump_in) {
+			return `not player's turn`;
+		}
+		if (!draw_state_flag) {
+			return `not draw stackable`;
+		}
+		if (jump_in && !jump_in_flag) {
+			return `failed jump-in`;
+		}
+		if (ono_99_flag) {
+			return `ono`;
+		}
+		return (
+			(normal_flag ||
+				draw_number_flag ||
+				clear_flag ||
+				wild_number_change_flag ||
+				card_match_bypass) &&
+			jump_in_flag
+		);
 	}
 	/**
 	 *

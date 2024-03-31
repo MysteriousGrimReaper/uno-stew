@@ -558,23 +558,43 @@ module.exports = {
 					uno_players.input_state = false;
 				};
 
-				// the jump-in (rule 2, 13) + patience (rule 7)
-				if (jump_in_flag) {
-					if (!card_chosen) {
+				// check if it's the user's turn
+				if (!current_player_flag) {
+					// console.log(`Not the right turn.`);
+					return;
+				}
+
+				// check if card is valid
+				switch (
+					card_chosen.playable_on({
+						card: pile_chosen.top_card,
+						effect_list,
+						current_player_flag,
+						jump_in: jump_in_flag,
+					})
+				) {
+					case `not player's turn`:
 						return;
-					}
-					if (
-						!card_chosen.playable_on({
-							card: pile_chosen.top_card,
-							jump_in: true,
-						})
-					) {
+					case `not draw stackable`:
+						return await game_channel.send(
+							`A draw attack was played upon you! Stack the draws by playing a draw card of equal or higher value, or by using a card's special effect. (If you have no valid cards, type \`draw\` to draw.)`
+						);
+					case `failed jump-in`:
 						await game_channel.send(
 							`${player.user} jumped in with the wrong card... draw 1 card.`
 						);
-						player.draw(drawpile, 1);
-						return;
-					}
+						return await player.draw(drawpile, 1);
+					case `ono`:
+						return await game_channel.send(
+							`You can't play that card.`
+						);
+					case false:
+						return await game_channel.send(
+							`You can't play that card.`
+						);
+				}
+				// the jump-in (rule 2, 13) + patience (rule 7)
+				if (jump_in_flag) {
 					player.play(card_chosen, pile_chosen);
 					await game_channel.send(
 						`${
@@ -674,26 +694,6 @@ module.exports = {
 							async (mod) => await process_effects(mod)
 						);
 					}*/
-					return;
-				}
-
-				// check if it's the user's turn
-				if (!current_player_flag) {
-					// console.log(`Not the right turn.`);
-					return;
-				}
-
-				// check if card is valid
-				if (
-					!card_chosen.playable_on({
-						card: pile_chosen.top_card,
-						effect_list,
-					})
-				) {
-					await game_channel.send(
-						`That card cannot be placed there.`
-					);
-
 					return;
 				}
 				const inactive_pile_flag = !pile_chosen.active;
