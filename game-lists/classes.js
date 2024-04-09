@@ -83,7 +83,7 @@ class Card {
 		return this.front.text;
 	}
 	hand_text(player_manager) {
-		const playable = this.playable_piles(player_manager).reduce(
+		const playable = this.playable_piles(player_manager, true).reduce(
 			(acc, cv) => acc || cv,
 			false
 		);
@@ -96,16 +96,8 @@ class Card {
 	get back_text() {
 		return this.back.text;
 	}
-	playable_on({ card, pile_chosen, player_manager, jump_in = false }) {
-		return this.front.playable_on({
-			card,
-			pile_chosen,
-			player_manager,
-			jump_in,
-		});
-	}
-	playable_piles(player_manager) {
-		return this.front.playable_piles(player_manager);
+	playable_piles(player_manager, current_player_flag = false) {
+		return this.front.playable_piles(player_manager, current_player_flag);
 	}
 }
 /**
@@ -153,64 +145,17 @@ class CardFace {
 		];
 		this.hand_text = `${this.aliases[1]} (${this.aliases[0]})`;
 	}
-	playable_piles(player_manager) {
-		return player_manager.drawpile.discardpiles.map((dp) =>
-			this.playable_on({ card: dp.top_card })
+	playable_piles(player_manager, current_player_flag = false) {
+		const card_to_play = structuredClone(this);
+        const dpiles = player_manager.drawpile.discardpiles
+		return dpiles.map((dp) =>
+			{	const card = structuredClone(dp.top_card)
+				return player_manager.playable_on({ card_to_play, card, pile_chosen: dp, current_player_flag }) == true
+			}
 		);
 	}
-	/**
-	 * Check if this card is playable on a given card.
-	 * @param {CardFace} card
-	 * @returns true if the card is playable
-	 */
-	playable_on({
-		card,
-		jump_in = false,
-		player_manager,
-		current_player_flag,
-	}) {
-		const effect_list = player_manager.effect_list;
-		const effect =
-			effect_list[effect_list.map((e) => e.name).indexOf(this.icon)];
-		const card_match_bypass = effect?.card_match_bypass;
-		const draw_stackable = effect?.draw_stackable;
-		const clear_flag = this.icon == `cl`;
-		const wild_match = card.color == `w` || this.color == `w`;
-		const color_match = card.color == this.color;
-		const icon_match = card.icon == this.icon;
-		const jump_in_flag = (color_match && icon_match && jump_in) || !jump_in;
-		const normal_flag = wild_match || color_match || icon_match;
-		let wild_number_change_flag = false;
-		if (!normal_flag && this.icon == `wn` && !isNaN(parseInt(card.icon))) {
-			this.icon = card.icon;
-			wild_number_change_flag = true;
-		}
-		const draw_number_flag =
-			parseInt(this.icon.slice(1)) >= parseInt(card.icon.slice(1));
-		const draw_state = player_manager.draw_stack > 0;
-		const draw_state_flag = !draw_state || (draw_stackable && draw_state);
-		const ono_99_flag = this.icon == `99`;
-		if (!current_player_flag && !jump_in) {
-			return `not player's turn`;
-		}
-		if (!draw_state_flag) {
-			return `not draw stackable`;
-		}
-		if (jump_in && !jump_in_flag) {
-			return `failed jump-in`;
-		}
-		if (ono_99_flag) {
-			return `ono`;
-		}
-		return (
-			(normal_flag ||
-				draw_number_flag ||
-				clear_flag ||
-				wild_number_change_flag ||
-				card_match_bypass) &&
-			jump_in_flag
-		);
-	}
+	
+	
 	/**
 	 *
 	 * @returns The text information of a card.
@@ -246,6 +191,7 @@ class Player {
 		this.character;
 		this.pizza = 1;
 		this.drawpile;
+		this.popcorn = 5
 	}
 	/**
 	 * Returns the player's user ID.
@@ -342,8 +288,13 @@ class Hand extends Array {
 			return card_in_hand.front.aliases.includes(card_text.toLowerCase());
 		});
 	}
-	text(player_manager) {
-		return `- ${this.map((card) => card.hand_text(player_manager)).join(
+    get init_text() {
+        return `- ${this.map((card) => {return card.text}).join(
+			`\n- `
+		)}`;
+    }
+	text(player_manager, current_player_flag = false) {
+		return `- ${this.map((card) => {return card.hand_text(player_manager, current_player_flag)}).join(
 			`\n- `
 		)}`;
 	}
@@ -528,6 +479,7 @@ class PlayerManager extends Array {
 		this.losers_list = [];
 		this.attack_counter = 1;
 		this.effect_list = [];
+		this.popcorn_users = []
 	}
 	/**
 	 * Dials up the oven (Attack d10).
@@ -595,6 +547,10 @@ class PlayerManager extends Array {
 	setWildDrawPile(drawpile) {
 		this.wild_drawpile = drawpile;
 		return this;
+	}
+	setEffectList(effect_list) {
+		this.effect_list = effect_list
+		return this
 	}
 	/**
 	 * Returns the next player.
@@ -688,6 +644,79 @@ class PlayerManager extends Array {
 		this.splice(this.current_player_index, 1);
 		this.step(true);
 	}
+	/**
+	 * Check if this card is playable on a given card.
+	 * @param {CardFace} card
+	 * @returns true if the card is playable
+	 */
+	playable_on({
+		card_to_play,
+		card,
+		jump_in = false,
+		current_player_flag = false,
+		pile_chosen = undefined,
+		source = undefined
+	}) {
+		if (!card) {
+			return false
+		}
+		const effect_list = this.effect_list;
+		const effect =
+			effect_list[effect_list.map((e) => e.name).indexOf(card_to_play.icon)];
+		const card_match_bypass = effect?.card_match_bypass;
+		const draw_stackable = effect?.draw_stackable;
+		const clear_flag = card_to_play.icon == `cl`;
+		const wild_match = card.color == `w` || card_to_play.color == `w`;
+		const color_match = card.color == card_to_play.color;
+		const icon_match = card.icon == card_to_play.icon;
+		const jump_in_flag = (color_match && icon_match && jump_in) || !jump_in;
+		const normal_flag = wild_match || color_match || icon_match;
+		let wild_number_change_flag = false;
+		if (!normal_flag && card_to_play.icon == `wn` && !isNaN(parseInt(card?.icon))) {
+			card_to_play.icon = card.icon;
+			wild_number_change_flag = true;
+		}
+		const draw_number_flag =
+			parseInt(card_to_play?.icon?.slice(1)) >= parseInt(card?.icon?.slice(1));
+		const draw_state = this.draw_stack > 0;
+		const draw_state_flag = !draw_state || (draw_stackable && draw_state);
+		const ono_99_flag = card_to_play.icon == `99`;
+		const flex_flag = card_to_play.flex == card?.color
+		const inactive_pile_flag = !pile_chosen?.active;
+        const inactive_pile_bypass = effect?.inactive_pile_bypass;
+		const hand_flag = source == `hand`
+		if (!current_player_flag && !jump_in) {
+			return `not player's turn`;
+		}
+		if (jump_in && !jump_in_flag) {
+			return `failed jump-in`;
+		}
+		if (jump_in && jump_in_flag) {
+			return `jump-in`
+		}
+		if (inactive_pile_flag && !inactive_pile_bypass) {
+            console.log(pile_chosen)
+			return `inactive`;
+		}
+		if (!draw_state_flag) {
+			return `not draw stackable`;
+		}
+		if (ono_99_flag) {
+			return `ono`;
+		}
+		if (flex_flag) {
+			return `flex`
+		}
+		return (
+			(normal_flag ||
+				draw_number_flag ||
+				clear_flag ||
+				wild_number_change_flag ||
+				card_match_bypass) &&
+			jump_in_flag
+		);
+	}
+
 }
 
 module.exports = {
