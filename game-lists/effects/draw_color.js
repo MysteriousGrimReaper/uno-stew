@@ -11,6 +11,7 @@ color_map.set("a", "Amber");
 color_map.set("i", "Ivory");
 const color_keys = [];
 const color_values = [];
+const wait = require("node:timers/promises").setTimeout;
 for (const value of color_map.keys()) {
 	color_keys.push(value);
 }
@@ -47,31 +48,14 @@ module.exports = {
 					return;
 				}
 				const color = collectedMessage.content;
-				uno_players.draw_stack++;
+				let card_drawn = await uno_players.next_player.draw(uno_players.drawpile, 1)[0]
 				while (
-					uno_players.drawpile[
-						uno_players.drawpile.length - uno_players.draw_stack
-					]?.color != color &&
-					color_map.get(
-						uno_players.drawpile[
-							uno_players.drawpile.length - uno_players.draw_stack
-						]?.color
-					) != color
+					card_drawn.color != color &&
+					color_map.get(card_drawn.color) != color
 				) {
-					console.log(
-						`Deck card color: ${
-							uno_players.drawpile[
-								uno_players.drawpile.length -
-									uno_players.draw_stack
-							]?.color
-						}`
-					);
-					console.log(`Color selected: ${color}`);
-					uno_players.draw_stack++;
+					await wait(500)
+					card_drawn = await uno_players.next_player.draw(uno_players.drawpile, 1)[0]
 				}
-				await uno_players.game_channel.send(
-					`${uno_players.next_player.user} will now draw ${uno_players.draw_stack} cards.`
-				);
 				collector.stop();
 				resolve();
 			});

@@ -9,7 +9,7 @@ module.exports = {
 		});
 		console.log(uno_players);
 		uno_players.forEach((p) =>
-			p.user.send(`Your new hand:\n${p.hand.text}`)
+			p.user.send(`Your new hand:\n${p.hand.default_text}`)
 		);
 		await uno_players.game_channel.send(`All players have swapped hands!`);
 	},

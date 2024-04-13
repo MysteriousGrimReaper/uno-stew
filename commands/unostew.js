@@ -268,6 +268,11 @@ module.exports = {
 				const user_index = uno_players
 					.map((p) => p.user)
 					.indexOf(message.author);
+
+					// if user is not in the game
+					if (player == undefined || user_index < 0) {
+						return;
+					}
 				const current_player_flag =
 					user_index == uno_players.current_turn_index;
 				switch (message.content.toLowerCase()) {
@@ -311,7 +316,6 @@ module.exports = {
 						return player.hand.check_for_card(cv);
 					}
 				}, undefined);
-				// console.log(card_chosen);
 				const debug_ids = [
 					`315495597874610178`,
 					`1014413186017021952`,
@@ -527,23 +531,11 @@ module.exports = {
 				const pile_chosen =
 					pile_indicator != undefined
 						? drawpile.discardpiles[parseInt(pile_indicator[1]) - 1]
-						: drawpile.discardpiles[
-								drawpile.discardpiles
-									.map((p) => p.top_card)
-									.findIndex(
-										(d) =>
-											d.wild ||
-											d.color == card_chosen.color ||
-											d.icon == card_chosen.icon
-									)
-						  ] ?? drawpile.discardpiles[0];
+						: drawpile.discardpiles.find((pile) => pile.active && uno_players.playable_on({card_to_play: card_chosen, pile_chosen: pile, current_player_flag})) ?? drawpile.discardpiles[0];
 				// console.log(pile_chosen);
 				const current_card = pile_chosen.top_card;
 
-				// if user is not in the game
-				if (player == undefined || user_index < 0) {
-					return;
-				}
+
 
 				// effect processing
 				const process_effects = async (symbol) => {
@@ -567,13 +559,11 @@ module.exports = {
 
 				// check if card is valid
 				switch (
-					card_chosen.playable_on({
-						card: pile_chosen.top_card,
+					uno_players.playable_on({ card_to_play: card_chosen, card: pile_chosen.top_card,
 						effect_list,
 						current_player_flag,
 						jump_in: jump_in_flag,
-						pile_chosen
-					})
+						pile_chosen})
 				) {
 					case `not player's turn`:
 						return;
@@ -721,12 +711,17 @@ module.exports = {
 					uno_players.add_winner(player.id);
 				}
 				// where the effects begin
-
-				await process_effects(card_chosen.icon);
+				try {
+					await process_effects(card_chosen.icon);
 				if (card_chosen.modifiers) {
 					card_chosen.modifiers.forEach(
 						async (mod) => await process_effects(mod)
 					);
+				}
+				}
+				catch (error) {
+					await game_channel.send(`There was an error with the effect...`)
+					console.log(error)
 				}
 				await end_turn();
 			});

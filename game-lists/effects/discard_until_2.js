@@ -26,9 +26,10 @@ module.exports = {
 					time: 120000,
 				});
 			button_collector.on(`collect`, async (i) => {
-				await i.reply({
+				await i.deferReply({ephemeral: true})
+				await i.editReply({
 					ephemeral: true,
-					content: `${player.hand.text}`,
+					content: `${player.hand.default_text}`,
 				});
 			});
 			button_collector.on(`ignore`, async (i) => {

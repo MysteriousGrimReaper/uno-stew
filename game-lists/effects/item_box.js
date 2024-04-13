@@ -279,7 +279,7 @@ module.exports = {
 					button_collector.on(`collect`, async (i) => {
 						await i.reply({
 							ephemeral: true,
-							content: `${player.hand.text}`,
+							content: `${player.hand.default_text}`,
 						});
 					});
 					button_collector.on(`ignore`, async (i) => {

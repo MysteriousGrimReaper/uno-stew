@@ -73,6 +73,9 @@ class Card {
 	set modifiers(m) {
 		this.front.modifiers = m;
 	}
+	set flex(f) {
+		this.front.flex = f
+	}
 	/**
 	 * Flips the card to the back side.
 	 */
@@ -115,8 +118,8 @@ class CardFace {
 			color_keys.indexOf(color),
 			1
 		);
-		this.flex =
-			Math.random() < 0.1 || flex
+		this.flex = flex ? flex :
+			Math.random() < 0.1
 				? possible_flex_color_array[
 						Math.floor(
 							Math.random() * possible_flex_color_array.length
@@ -139,7 +142,8 @@ class CardFace {
 
 		this.aliases = [
 			// all ways to refer to the card
-			`${this.color}${this.icon}`.toLowerCase(),
+			`${this.color}${this.icon}`.toLowerCase() + (this.flex ? `.f` + this.flex : ``),
+			
 			this.text,
 			this.text.toLowerCase(),
 		];
@@ -239,7 +243,7 @@ class Player {
 	play(card, discardpile) {
 		card.player = this;
 		discardpile.push(this.hand.remove_card(card));
-
+		card.flex = false
 		if (this.hand.length == 1) {
 			this.uno_callable = true;
 		} else {
@@ -293,6 +297,11 @@ class Hand extends Array {
 			`\n- `
 		)}`;
     }
+	get default_text() {
+		return `- ${this.map((card) => {return card.text}).join(
+			`\n- `
+		)}`;
+	}
 	text(player_manager, current_player_flag = false) {
 		return `- ${this.map((card) => {return card.hand_text(player_manager, current_player_flag)}).join(
 			`\n- `
@@ -520,6 +529,7 @@ class PlayerManager extends Array {
 					: `The oven is **infernal**. ${emoji_counter}`
 			}`
 		);
+		await (500)
 		return false;
 	}
 	get current_user() {
@@ -651,19 +661,19 @@ class PlayerManager extends Array {
 	 */
 	playable_on({
 		card_to_play,
-		card,
 		jump_in = false,
 		current_player_flag = false,
 		pile_chosen = undefined,
 		source = undefined
 	}) {
+		const card = pile_chosen.top_card
 		if (!card) {
 			return false
 		}
 		const effect_list = this.effect_list;
 		const effect =
 			effect_list[effect_list.map((e) => e.name).indexOf(card_to_play.icon)];
-		const card_match_bypass = effect?.card_match_bypass;
+		const card_match_bypass = effect?.card_match_bypass ?? false;
 		const draw_stackable = effect?.draw_stackable;
 		const clear_flag = card_to_play.icon == `cl`;
 		const wild_match = card.color == `w` || card_to_play.color == `w`;
@@ -672,7 +682,7 @@ class PlayerManager extends Array {
 		const jump_in_flag = (color_match && icon_match && jump_in) || !jump_in;
 		const normal_flag = wild_match || color_match || icon_match;
 		let wild_number_change_flag = false;
-		if (!normal_flag && card_to_play.icon == `wn` && !isNaN(parseInt(card?.icon))) {
+		if (!normal_flag && card_to_play.icon == `wn` && /^[0-9]$/.test(card?.icon)) {
 			card_to_play.icon = card.icon;
 			wild_number_change_flag = true;
 		}
@@ -707,6 +717,10 @@ class PlayerManager extends Array {
 		if (flex_flag) {
 			return `flex`
 		}
+		console.log(`top card:`)
+		console.log(card)
+		console.log(`chosen card:`)
+		console.log(card_to_play)
 		return (
 			(normal_flag ||
 				draw_number_flag ||
