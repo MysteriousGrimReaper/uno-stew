@@ -195,7 +195,7 @@ class Player {
 		this.character;
 		this.pizza = 1;
 		this.drawpile;
-		this.popcorn = 5
+		this.popcorn = 1
 	}
 	/**
 	 * Returns the player's user ID.
