@@ -137,7 +137,6 @@ module.exports = {
 			// (hand/table/players) button input processing
 			hand_collect_reply_fn = async (i) => {
 				const { customId } = i;
-				await i.deferReply({ephemeral: true})
 				if (!uno_players.map((p) => p.user.id).includes(i.user.id)) {
 					await i.reply({
 						content: `You aren't in the game...`,
@@ -158,7 +157,7 @@ module.exports = {
 							)
 							.setTitle(`Your hand (${player.hand.length}):`)
 							.setDescription(player.hand.text(uno_players, true));
-						await i.editReply({
+						await i.reply({
 							embeds: [hand_embed],
 							ephemeral: true,
 						});
@@ -194,7 +193,7 @@ module.exports = {
 									(p) =>
 										`## ${
 											p.user.globalName ?? p.user.username
-										} ${`🍕`.repeat(p.pizza)}\n${
+										} ${`🍕`.repeat(p.pizza)}${`🍿`.repeat(p.popcorn)}\n${
 											p.hand.back_text
 										}`
 								)

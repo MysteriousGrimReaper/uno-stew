@@ -170,14 +170,14 @@ class CardFace {
 			return ``;
 		}
 		const color_name = color_map.get(this.color) ?? this.color;
-		card_text += `${color_name} ` ?? ``;
+		card_text += `${color_name}` ?? ``;
 		const icon_name = icon_map.get(this.icon) ?? this.icon;
-		card_text += `${icon_name} `;
+		card_text += ` ${icon_name}`;
 		card_text +=
 			this.modifiers.length > 0
 				? ` (+ ${this.modifiers.join(`, `)})`
 				: ``;
-		card_text += this.flex ? `(Flex ${color_map.get(this.flex)})` : ``;
+		card_text += this.flex ? ` (Flex ${color_map.get(this.flex)})` : ``;
 		return card_text.trim();
 	}
 }

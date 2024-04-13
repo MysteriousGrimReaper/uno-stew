@@ -140,7 +140,7 @@ module.exports = {
 							collectedMessage.content.toLowerCase()
 						);
 						if (target_player) {
-							uno_players.attack(2, target_player);
+							uno_players.attack(Math.ceil(Math.random() * 4), target_player);
 						}
 					});
 
