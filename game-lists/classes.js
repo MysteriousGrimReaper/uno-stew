@@ -74,7 +74,7 @@ class Card {
 		this.front.modifiers = m;
 	}
 	set flex(f) {
-		this.front.flex = f
+		this.front.flex = f;
 	}
 	/**
 	 * Flips the card to the back side.
@@ -114,18 +114,19 @@ class CardFace {
 		this.modifiers = modifiers ?? []; // what modifiers(s) the card has (array)
 		this.icon = icon ?? ``; // card number or symbol (string)
 		this.color = color; // card colour (string)
+		console.log(color_keys);
+
 		const possible_flex_color_array = color_keys.toSpliced(
 			color_keys.indexOf(color),
 			1
 		);
-		this.flex = flex ? flex :
-			Math.random() < 0.1
-				? possible_flex_color_array[
-						Math.floor(
-							Math.random() * possible_flex_color_array.length
-						)
-				  ]
-				: false;
+		this.flex = flex
+			? flex
+			: Math.random() < 0.1
+			? possible_flex_color_array[
+					Math.floor(Math.random() * possible_flex_color_array.length)
+			  ]
+			: false;
 		this.wild_colors =
 			this.color == `w`
 				? shuffleArray(color_keys.filter((c) => c != `w`)).slice(6)
@@ -142,8 +143,9 @@ class CardFace {
 
 		this.aliases = [
 			// all ways to refer to the card
-			`${this.color}${this.icon}`.toLowerCase() + (this.flex ? `.f` + this.flex : ``),
-			
+			`${this.color}${this.icon}`.toLowerCase() +
+				(this.flex ? `.f` + this.flex : ``),
+
 			this.text,
 			this.text.toLowerCase(),
 		];
@@ -151,15 +153,20 @@ class CardFace {
 	}
 	playable_piles(player_manager, current_player_flag = false) {
 		const card_to_play = structuredClone(this);
-        const dpiles = player_manager.drawpile.discardpiles
-		return dpiles.map((dp) =>
-			{	const card = structuredClone(dp.top_card)
-				return player_manager.playable_on({ card_to_play, card, pile_chosen: dp, current_player_flag }) == true
-			}
-		);
+		const dpiles = player_manager.drawpile.discardpiles;
+		return dpiles.map((dp) => {
+			const card = structuredClone(dp.top_card);
+			return (
+				player_manager.playable_on({
+					card_to_play,
+					card,
+					pile_chosen: dp,
+					current_player_flag,
+				}) == true
+			);
+		});
 	}
-	
-	
+
 	/**
 	 *
 	 * @returns The text information of a card.
@@ -195,7 +202,8 @@ class Player {
 		this.character;
 		this.pizza = 1;
 		this.drawpile;
-		this.popcorn = 1
+		this.popcorn = 1;
+		this.member;
 	}
 	/**
 	 * Returns the player's user ID.
@@ -243,7 +251,7 @@ class Player {
 	play(card, discardpile) {
 		card.player = this;
 		discardpile.push(this.hand.remove_card(card));
-		card.flex = false
+		card.flex = false;
 		if (this.hand.length == 1) {
 			this.uno_callable = true;
 		} else {
@@ -292,20 +300,20 @@ class Hand extends Array {
 			return card_in_hand.front.aliases.includes(card_text.toLowerCase());
 		});
 	}
-    get init_text() {
-        return `- ${this.map((card) => {return card.text}).join(
-			`\n- `
-		)}`;
-    }
+	get init_text() {
+		return `- ${this.map((card) => {
+			return card.text;
+		}).join(`\n- `)}`;
+	}
 	get default_text() {
-		return `- ${this.map((card) => {return card.text}).join(
-			`\n- `
-		)}`;
+		return `- ${this.map((card) => {
+			return card.text;
+		}).join(`\n- `)}`;
 	}
 	text(player_manager, current_player_flag = false) {
-		return `- ${this.map((card) => {return card.hand_text(player_manager, current_player_flag)}).join(
-			`\n- `
-		)}`;
+		return `- ${this.map((card) => {
+			return card.hand_text(player_manager, current_player_flag);
+		}).join(`\n- `)}`;
 	}
 	get back_text() {
 		return `- ${this.map((card) => card.back_text).join(`\n- `)}`;
@@ -488,7 +496,7 @@ class PlayerManager extends Array {
 		this.losers_list = [];
 		this.attack_counter = 1;
 		this.effect_list = [];
-		this.popcorn_users = []
+		this.popcorn_users = [];
 	}
 	/**
 	 * Dials up the oven (Attack d10).
@@ -529,7 +537,7 @@ class PlayerManager extends Array {
 					: `The oven is **infernal**. ${emoji_counter}`
 			}`
 		);
-		await (500)
+		await 500;
 		return false;
 	}
 	get current_user() {
@@ -548,6 +556,11 @@ class PlayerManager extends Array {
 	}
 	setGameInfo(interaction) {
 		this.game_channel = interaction.channel;
+		const guild = interaction.guild;
+		this.forEach(
+			async (player) =>
+				(player.member = await guild.members.fetch(player.user.id))
+		);
 		return this;
 	}
 	setMainDrawPile(drawpile) {
@@ -559,8 +572,8 @@ class PlayerManager extends Array {
 		return this;
 	}
 	setEffectList(effect_list) {
-		this.effect_list = effect_list
-		return this
+		this.effect_list = effect_list;
+		return this;
 	}
 	/**
 	 * Returns the next player.
@@ -664,15 +677,17 @@ class PlayerManager extends Array {
 		jump_in = false,
 		current_player_flag = false,
 		pile_chosen = undefined,
-		source = undefined
+		source = undefined,
 	}) {
-		const card = pile_chosen.top_card
+		const card = pile_chosen.top_card;
 		if (!card) {
-			return false
+			return false;
 		}
 		const effect_list = this.effect_list;
 		const effect =
-			effect_list[effect_list.map((e) => e.name).indexOf(card_to_play.icon)];
+			effect_list[
+				effect_list.map((e) => e.name).indexOf(card_to_play.icon)
+			];
 		const card_match_bypass = effect?.card_match_bypass ?? false;
 		const draw_stackable = effect?.draw_stackable;
 		const clear_flag = card_to_play.icon == `cl`;
@@ -682,19 +697,24 @@ class PlayerManager extends Array {
 		const jump_in_flag = (color_match && icon_match && jump_in) || !jump_in;
 		const normal_flag = wild_match || color_match || icon_match;
 		let wild_number_change_flag = false;
-		if (!normal_flag && card_to_play.icon == `wn` && /^[0-9]$/.test(card?.icon)) {
+		if (
+			!normal_flag &&
+			card_to_play.icon == `wn` &&
+			/^[0-9]$/.test(card?.icon)
+		) {
 			card_to_play.icon = card.icon;
 			wild_number_change_flag = true;
 		}
 		const draw_number_flag =
-			parseInt(card_to_play?.icon?.slice(1)) >= parseInt(card?.icon?.slice(1));
+			parseInt(card_to_play?.icon?.slice(1)) >=
+			parseInt(card?.icon?.slice(1));
 		const draw_state = this.draw_stack > 0;
 		const draw_state_flag = !draw_state || (draw_stackable && draw_state);
 		const ono_99_flag = card_to_play.icon == `99`;
-		const flex_flag = card_to_play.flex == card?.color
+		const flex_flag = card_to_play.flex == card?.color;
 		const inactive_pile_flag = !pile_chosen?.active;
-        const inactive_pile_bypass = effect?.inactive_pile_bypass;
-		const hand_flag = source == `hand`
+		const inactive_pile_bypass = effect?.inactive_pile_bypass;
+		const overload = card.icon == `ov`;
 		if (!current_player_flag && !jump_in) {
 			return `not player's turn`;
 		}
@@ -702,10 +722,10 @@ class PlayerManager extends Array {
 			return `failed jump-in`;
 		}
 		if (jump_in && jump_in_flag) {
-			return `jump-in`
+			return `jump-in`;
 		}
 		if (inactive_pile_flag && !inactive_pile_bypass) {
-            console.log(pile_chosen)
+			console.log(pile_chosen);
 			return `inactive`;
 		}
 		if (!draw_state_flag) {
@@ -715,12 +735,15 @@ class PlayerManager extends Array {
 			return `ono`;
 		}
 		if (flex_flag) {
-			return `flex`
+			return `flex`;
 		}
-		console.log(`top card:`)
-		console.log(card)
-		console.log(`chosen card:`)
-		console.log(card_to_play)
+		if (overload && !clear_flag) {
+			return `overload`;
+		}
+		console.log(`top card:`);
+		console.log(card);
+		console.log(`chosen card:`);
+		console.log(card_to_play);
 		return (
 			(normal_flag ||
 				draw_number_flag ||
@@ -730,7 +753,6 @@ class PlayerManager extends Array {
 			jump_in_flag
 		);
 	}
-
 }
 
 module.exports = {
