@@ -59,6 +59,7 @@ module.exports = {
 				await wait(Math.random() * 500 + 500);
 				const side = side_index == 1 ? `heads` : `tails`;
 				const player_who_draws = side == `heads` ? tails : heads;
+				await wait(500)
 				await uno_players.game_channel.send(
 					`The coin lands **${side}**! ${player_who_draws.user}, draw 4 cards.`
 				);

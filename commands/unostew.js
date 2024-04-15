@@ -429,7 +429,7 @@ module.exports = {
 					await uno_players.current_player.user.send(
 						`Your hand:\n${
 							uno_players[uno_players.current_turn_index].hand
-								.text
+								.text(uno_players)
 						}`
 					);
 				}

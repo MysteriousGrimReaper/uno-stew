@@ -4,14 +4,14 @@ module.exports = {
 	async effect({ uno_players, pile_chosen }) {
 		const discarder = uno_players.next_player;
 		pile_chosen.push(
-			discarder.hand.splice(
+			...discarder.hand.splice(
 				Math.floor(discarder.hand.length * Math.random()),
 				1
 			)
 		);
 		if (discarder.hand.length > 0) {
 			pile_chosen.push(
-				discarder.hand.splice(
+				...discarder.hand.splice(
 					Math.floor(discarder.hand.length * Math.random()),
 					1
 				)

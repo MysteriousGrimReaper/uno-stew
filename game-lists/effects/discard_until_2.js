@@ -18,12 +18,10 @@ module.exports = {
 			const filter2 = (i) => i.user.id == player.user.id;
 			const collector = uno_players.game_channel.createMessageCollector({
 				filter,
-				time: 60000,
 			});
 			const button_collector =
 				cards_message.createMessageComponentCollector({
 					filter: filter2,
-					time: 120000,
 				});
 			button_collector.on(`collect`, async (i) => {
 				await i.deferReply({ephemeral: true})
@@ -95,17 +93,16 @@ module.exports = {
 				});
 				if (player.hand.length <= 2) {
 					collector.stop();
-					resolve();
 				}
 			});
 
 			collector.on("end", (collected) => {
 				if (collected.size === 0) {
 					uno_players.game_channel.send("You timed out.");
-					collector.stop();
-					button_collector.stop();
-					resolve();
+					
 				}
+					button_collector.stop();
+				resolve();
 			});
 		});
 		await repeat_discard_promise;

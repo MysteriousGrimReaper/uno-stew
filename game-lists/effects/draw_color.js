@@ -28,33 +28,30 @@ module.exports = {
 		});
 		const color_promise = new Promise((resolve) => {
 			console.log(`Awaiting response`);
-			const filter = (m) => m.author.id === player.user.id; // Only collect messages from the author of the command
+			const filter = (m) => m.author.id === player.user.id && (
+				color_keys.includes(
+					m.content.toLowerCase()
+				) ||
+				color_values.includes(
+					m.content.toLowerCase()
+				)
+			); // Only collect messages from the author of the command
 			const collector = uno_players.game_channel.createMessageCollector({
 				filter,
 				time: 60000,
+				max: 1
 			});
 			collector.on("collect", async (collectedMessage) => {
-				if (
-					!(
-						color_keys.includes(
-							collectedMessage.content.toLowerCase()
-						) ||
-						color_values.includes(
-							collectedMessage.content.toLowerCase()
-						)
-					)
-				) {
-					console.log(`did not include color`);
-					return;
-				}
 				const color = collectedMessage.content;
-				let card_drawn = await uno_players.next_player.draw(uno_players.drawpile, 1)[0]
+				let card_drawn = (await uno_players.next_player.draw(uno_players.drawpile, 1))[0]
 				while (
 					card_drawn.color != color &&
 					color_map.get(card_drawn.color) != color
 				) {
-					await wait(500)
-					card_drawn = await uno_players.next_player.draw(uno_players.drawpile, 1)[0]
+					console.log(card_drawn.color)
+					console.log(color)
+					console.log(`--`)
+					card_drawn = (await uno_players.next_player.draw(uno_players.drawpile, 1))[0]
 				}
 				collector.stop();
 				resolve();

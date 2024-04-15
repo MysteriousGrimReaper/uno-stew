@@ -114,19 +114,18 @@ class CardFace {
 		this.modifiers = modifiers ?? []; // what modifiers(s) the card has (array)
 		this.icon = icon ?? ``; // card number or symbol (string)
 		this.color = color; // card colour (string)
-		console.log(color_keys);
 
 		const possible_flex_color_array = color_keys.toSpliced(
 			color_keys.indexOf(color),
 			1
-		);
-		this.flex = flex
+		).toSpliced(-1);
+		this.flex = this.color == `w` ? false : (flex
 			? flex
 			: Math.random() < 0.1
 			? possible_flex_color_array[
 					Math.floor(Math.random() * possible_flex_color_array.length)
 			  ]
-			: false;
+			: false);
 		this.wild_colors =
 			this.color == `w`
 				? shuffleArray(color_keys.filter((c) => c != `w`)).slice(6)
@@ -310,9 +309,9 @@ class Hand extends Array {
 			return card.text;
 		}).join(`\n- `)}`;
 	}
-	text(player_manager, current_player_flag = false) {
+	text(player_manager) {
 		return `- ${this.map((card) => {
-			return card.hand_text(player_manager, current_player_flag);
+			return card.hand_text(player_manager);
 		}).join(`\n- `)}`;
 	}
 	get back_text() {
@@ -395,7 +394,7 @@ class DrawPile extends Array {
 	check_match_color() {
 		return (
 			this.discardpiles
-				.map((pile) => pile.top_card.front.color)
+				.map((pile) => pile.top_card.color)
 				.reduce((acc, cv) => (acc == cv ? cv : false)) != false
 		);
 	}
@@ -636,7 +635,8 @@ class PlayerManager extends Array {
 		const globalNames = this.user_map
 			.map((user) => user.globalName?.toLowerCase())
 			.indexOf(name);
-		return this[Math.max(usernames, globalNames)];
+		const pings = this.user_map.map((user) => `<@${user.id}>`).indexOf(name)
+		return this[Math.max(usernames, globalNames, pings)];
 	}
 	/**
 	 * Remove a player based on their user id.
@@ -707,7 +707,7 @@ class PlayerManager extends Array {
 		}
 		const draw_number_flag =
 			parseInt(card_to_play?.icon?.slice(1)) >=
-			parseInt(card?.icon?.slice(1));
+			parseInt(card?.icon?.slice(1)) && card.icon[0] == card_to_play.icon[0] && card.icon[0] == `+`;
 		const draw_state = this.draw_stack > 0;
 		const draw_state_flag = !draw_state || (draw_stackable && draw_state);
 		const ono_99_flag = card_to_play.icon == `99`;
