@@ -584,15 +584,11 @@ class PlayerManager extends Array {
 			`▪️`.repeat(Math.max(0, 10 - this.attack_counter));
 		if (this.attack_counter >= 10) {
 			const cards_drawn = Math.ceil(Math.random() * 10);
+			this.attack_counter = 0;
 			await this.game_channel.send(
-				`The oven has **overheated**! It spews out... `
-			);
-			await wait(1000);
-			await this.game_channel.send(
-				`**${cards_drawn}** card(s) for ${roller.user}.`
+				`The oven has **overheated**! It spews out **${cards_drawn}** card(s) for ${roller.user}.`
 			);
 			await roller.draw(this.drawpile, cards_drawn);
-			this.attack_counter = 1;
 			return true;
 		}
 		await this.game_channel.send(

@@ -273,7 +273,6 @@ module.exports = {
 					const collector =
 						uno_players.game_channel.createMessageCollector({
 							filter,
-							time: 60000,
 						});
 					const button_collector =
 						cards_message.createMessageComponentCollector({
@@ -283,7 +282,7 @@ module.exports = {
 					button_collector.on(`collect`, async (i) => {
 						await i.reply({
 							ephemeral: true,
-							content: `${player.hand.default_text}`,
+							embeds: [player.init_hand_embed],
 						});
 					});
 					button_collector.on(`ignore`, async (i) => {
