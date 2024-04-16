@@ -4,7 +4,7 @@ module.exports = {
 	name: `-+`,
 	text: `Restock`,
 	async effect({ uno_players, player }) {
-		const cards_to_draw = player.hand.length - 1;
+		const cards_to_draw = player.hand.length - 3;
 		const cards_button = new ButtonBuilder()
 			.setCustomId(`view-cards`)
 			.setLabel("Playable Cards")
@@ -12,7 +12,7 @@ module.exports = {
 		const cards_row = new ActionRowBuilder().addComponents(cards_button);
 		const cards_message = await uno_players.game_channel.send({
 			components: [cards_row],
-			content: `Choose a card and a pile to discard to (or type \`stop\` to cancel the effect)!`,
+			content: `Choose a card to keep (or type \`stop\` to cancel the effect)!`,
 		});
 		const repeat_discard_promise = new Promise((resolve) => {
 			const filter = (m) => m.author.id === player.user.id; // Only collect messages from the author of the command
@@ -41,7 +41,7 @@ module.exports = {
 			button_collector.on(`end`, async () => {
 				await cards_message.edit({
 					components: [],
-					content: `Choose a card and a pile to discard to (or type \`stop\` to cancel the effect)!`,
+					content: `Choose a card to keep and a pile to discard to (or type \`stop\` to cancel the effect)!`,
 				});
 			});
 			collector.on("collect", async (collectedMessage) => {
@@ -83,18 +83,12 @@ module.exports = {
 				if (!card_chosen || !pile_chosen) {
 					return;
 				}
-				player.play(card_chosen, pile_chosen);
-				await uno_players.game_channel.send({
-					content: `${player.user.username} placed a **${
-						card_chosen.front.text
-					}** on dish ${
-						uno_players.drawpile.discardpiles.indexOf(pile_chosen) +
-						1
-					}. (${player.hand.length - 1} left)`,
+				player.hand.forEach((card) => {
+					if (card != card_chosen) {
+						player.play(card, pile_chosen);
+					}
 				});
-				if (player.hand.length <= 1) {
-					collector.stop();
-				}
+				collector.stop();
 			});
 
 			collector.on("end", (collected) => {
