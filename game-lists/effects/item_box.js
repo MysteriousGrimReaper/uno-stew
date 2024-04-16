@@ -76,6 +76,7 @@ module.exports = {
 					`You got a **blue shell**! ${sorted_players[0].user}, take that!`
 				);
 				sorted_players[0].draw(
+					uno_players.drawpile,
 					sorted_players[sorted_players.length - 1].hand.length
 				);
 				break;
@@ -140,7 +141,10 @@ module.exports = {
 							collectedMessage.content.toLowerCase()
 						);
 						if (target_player) {
-							uno_players.attack(Math.ceil(Math.random() * 4), target_player);
+							uno_players.attack(
+								Math.ceil(Math.random() * 4),
+								target_player
+							);
 						}
 					});
 

@@ -1,5 +1,11 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const wait = require("node:timers/promises").setTimeout;
+const {
+	EmbedBuilder,
+	ButtonBuilder,
+	ActionRowBuilder,
+	ButtonStyle,
+} = require("discord.js");
 const { color_map, icon_map, emoji_map, color_keys } = require(`./maps.js`);
 /**
  * Shuffles the array.
@@ -115,17 +121,21 @@ class CardFace {
 		this.icon = icon ?? ``; // card number or symbol (string)
 		this.color = color; // card colour (string)
 
-		const possible_flex_color_array = color_keys.toSpliced(
-			color_keys.indexOf(color),
-			1
-		).toSpliced(-1);
-		this.flex = this.color == `w` ? false : (flex
-			? flex
-			: Math.random() < 0.1
-			? possible_flex_color_array[
-					Math.floor(Math.random() * possible_flex_color_array.length)
-			  ]
-			: false);
+		const possible_flex_color_array = color_keys
+			.toSpliced(color_keys.indexOf(color), 1)
+			.toSpliced(-1);
+		this.flex =
+			this.color == `w`
+				? false
+				: flex
+				? flex
+				: Math.random() < 0.1
+				? possible_flex_color_array[
+						Math.floor(
+							Math.random() * possible_flex_color_array.length
+						)
+				  ]
+				: false;
 		this.wild_colors =
 			this.color == `w`
 				? shuffleArray(color_keys.filter((c) => c != `w`)).slice(6)
@@ -193,7 +203,7 @@ class CardFace {
  * @param {User} user A Discord User object.
  */
 class Player {
-	constructor(user) {
+	constructor(user, interaction) {
 		this.user = user; // discord user
 		this.hand = new Hand(); // Hand
 		this.uno_callable = false; // boolean
@@ -202,7 +212,7 @@ class Player {
 		this.pizza = 1;
 		this.drawpile;
 		this.popcorn = 1;
-		this.member;
+		this.member = interaction.guild.fetch(user.id);
 	}
 	/**
 	 * Returns the player's user ID.
@@ -210,6 +220,48 @@ class Player {
 	get id() {
 		return this.user.id;
 	}
+	get init_hand_embed() {
+		const avatar = this.user.displayAvatarURL();
+		return new EmbedBuilder()
+			.setTitle(`Your hand:`)
+			.setDescription(`${this.hand.init_text}`)
+			.setAuthor({
+				name: this.user.username,
+				iconURL: avatar,
+			})
+			.setFooter({
+				text: `${this.hand.length} cards | ${`🍕`.repeat(
+					this.pizza
+				)} | ${`🍿`.repeat(this.popcorn)}`,
+			});
+	}
+	hand_embed(player_manager) {
+		const avatar = this.user.displayAvatarURL();
+		return new EmbedBuilder()
+			.setTitle(`Your hand:`)
+			.setDescription(`${this.hand.text(player_manager)}`)
+			.setAuthor({
+				name: this.user.username,
+				iconURL: avatar,
+			})
+			.setFooter({
+				text: `${this.hand.length} cards | ${`🍕`.repeat(
+					this.pizza
+				)} | ${`🍿`.repeat(this.popcorn)}`,
+			})
+			.setColor(
+				this.hand.length < 10
+					? 0x55ff55
+					: this.hand.length < 18
+					? 0xdddd55
+					: 0xdd5555
+			);
+	}
+	/**
+	 * For pizza stealing.
+	 * @param {Player} player The player to steal a slice of pizza from.
+	 * @returns
+	 */
 	async steal(player) {
 		if (player.pizza <= 0) {
 			await player.draw(player.drawpile, 1);
@@ -258,7 +310,9 @@ class Player {
 		}
 	}
 	discard(card, discardpile) {
+		card.player = this;
 		discardpile.push(this.hand.remove_card(card));
+		card.flex = false;
 
 		if (this.hand.length == 1) {
 			this.uno_callable = true;
@@ -368,7 +422,9 @@ class DrawPile extends Array {
 		this.discardpiles.push(discardpile);
 	}
 	discard(discardpileindex) {
-		this.discardpiles[discardpileindex].push(this.pop());
+		const new_card = this.pop();
+		new_card.flex = false;
+		this.discardpiles[discardpileindex].push(new_card);
 	}
 	reshuffle() {
 		this.discardpiles.forEach((pile) => {
@@ -407,13 +463,31 @@ class DrawPile extends Array {
 	}
 	get discard_pile_text() {
 		return this.discardpiles
-			.map(
-				(dp, i) =>
-					`- ${!dp.active ? `~~` : ``}Dish ${i + 1}: **${
-						dp.top_card.text
-					}**${!dp.active ? `~~` : ``}`
-			)
+			.map((dp, index) => {
+				return {
+					name: `Dish ${index + 1}`,
+					value: `${dp.top_card.emoji} ${dp.top_card.text} ${
+						!dp.active ? `🚫` : ``
+					}`,
+				};
+			})
+			.map((d) => `${d.name}: **${d.value}**`)
 			.join(`\n`);
+	}
+	get table_embed() {
+		const dishes = this.discardpiles.map((dp, index) => {
+			return {
+				name:
+					`Dish ${index + 1}` +
+					`${!dp.active ? ` 🚫` : ``}` +
+					`${dp.top_card.icon == `ov` ? ` ⚠️` : ``}`,
+				value: `${dp.top_card.emoji} ${dp.top_card.text}`,
+			};
+		});
+		return new EmbedBuilder()
+			.setTitle(`Table:`)
+			.setColor(0x888888)
+			.addFields(...dishes);
 	}
 	load(card_deck) {
 		const load_deck = card_deck;
@@ -545,10 +619,10 @@ class PlayerManager extends Array {
 	get current_player() {
 		return this[this.current_turn_index];
 	}
-	load(player_list) {
+	load(player_list, interaction) {
 		this.push(
 			...player_list.map((user) => {
-				return new Player(user);
+				return new Player(user, interaction);
 			})
 		);
 		return this;
@@ -635,7 +709,9 @@ class PlayerManager extends Array {
 		const globalNames = this.user_map
 			.map((user) => user.globalName?.toLowerCase())
 			.indexOf(name);
-		const pings = this.user_map.map((user) => `<@${user.id}>`).indexOf(name)
+		const pings = this.user_map
+			.map((user) => `<@${user.id}>`)
+			.indexOf(name);
 		return this[Math.max(usernames, globalNames, pings)];
 	}
 	/**
@@ -707,7 +783,9 @@ class PlayerManager extends Array {
 		}
 		const draw_number_flag =
 			parseInt(card_to_play?.icon?.slice(1)) >=
-			parseInt(card?.icon?.slice(1)) && card.icon[0] == card_to_play.icon[0] && card.icon[0] == `+`;
+				parseInt(card?.icon?.slice(1)) &&
+			card.icon[0] == card_to_play.icon[0] &&
+			card.icon[0] == `+`;
 		const draw_state = this.draw_stack > 0;
 		const draw_state_flag = !draw_state || (draw_stackable && draw_state);
 		const ono_99_flag = card_to_play.icon == `99`;
@@ -740,10 +818,10 @@ class PlayerManager extends Array {
 		if (overload && !clear_flag) {
 			return `overload`;
 		}
-		console.log(`top card:`);
-		console.log(card);
-		console.log(`chosen card:`);
-		console.log(card_to_play);
+		// console.log(`top card:`);
+		// console.log(card);
+		// console.log(`chosen card:`);
+		// console.log(card_to_play);
 		return (
 			(normal_flag ||
 				draw_number_flag ||

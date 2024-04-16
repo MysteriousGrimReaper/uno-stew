@@ -49,12 +49,14 @@ module.exports = {
 						.setTitle(
 							`${game_name} starting! Press Join to join the game.`
 						)
+						.setThumbnail(`https://files.catbox.moe/m3tqcs.png`)
 						.setDescription(player_name_list().join("\n"));
 				};
 				const start_game_embed = () => {
 					return new EmbedBuilder()
 						.setColor(embed_color ?? 0x999999)
 						.setTitle(`${game_name} started!`)
+						.setThumbnail(`https://files.catbox.moe/m3tqcs.png`)
 						.setDescription(player_name_list().join("\n"));
 				};
 				const join_button = new ButtonBuilder()

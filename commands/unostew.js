@@ -111,7 +111,7 @@ module.exports = {
 			drawpile.addDiscardPile(discardpile_4);
 
 			const uno_players = new PlayerManager()
-				.load(player_list)
+				.load(player_list, interaction)
 				.setGameInfo(interaction)
 				.setMainDrawPile(drawpile)
 				.setWildDrawPile(wild_drawpile)
@@ -122,7 +122,7 @@ module.exports = {
 			uno_players.forEach(async (player) => {
 				player.draw(drawpile, 7);
 				player.drawpile = drawpile;
-				await player.user.send(`Your hand:\n${player.hand.init_text}`);
+				await player.user.send({ embeds: [player.init_hand_embed] });
 			});
 			drawpile.discard(0);
 			drawpile.discard(1);
@@ -145,41 +145,14 @@ module.exports = {
 				const player = user_to_player(i.user);
 				switch (customId) {
 					case `unostew_hand`:
-						const hand_embed = new EmbedBuilder()
-							.setColor(
-								player.hand.length <= 8
-									? 0x00dd00
-									: player.hand.length <= 16
-									? 0xdddd00
-									: 0xdd0000
-							)
-							.setTitle(`Your hand (${player.hand.length}):`)
-							.setDescription(
-								player.hand.text(uno_players, true)
-							);
 						await i.reply({
-							embeds: [hand_embed],
+							embeds: [player.hand_embed(uno_players)],
 							ephemeral: true,
 						});
 						break;
 					case `unostew_table`:
-						const table_embed = new EmbedBuilder()
-							.setTitle(`Table:`)
-							.setColor(0x888888)
-							.addFields(
-								...drawpile.discardpiles.map((dp, index) => {
-									return {
-										name:
-											`Dish ${index + 1}` +
-											`${
-												!dp.active ? ` (inactive)` : ``
-											}`,
-										value: `${dp.top_card.emoji} ${dp.top_card.text}`,
-									};
-								})
-							);
 						await i.reply({
-							embeds: [table_embed],
+							embeds: [drawpile.table_embed],
 							ephemeral: true,
 						});
 						break;
@@ -222,19 +195,8 @@ module.exports = {
 			);
 			// update this to be an embed
 			await game_channel.send({
-				content: `The first cards are:\n${drawpile.discardpiles
-					.map((dp, index) => {
-						return {
-							name: `Dish ${index + 1}`,
-							value: `${dp.top_card.emoji} ${dp.top_card.text} ${
-								!dp.active ? ` (inactive)` : ``
-							}`,
-						};
-					})
-					.map((d) => `${d.name}: **${d.value}**`)
-					.join(`\n`)}.\nIt is now ${
-					uno_players.current_user
-				}'s turn!`,
+				content: `It is now ${uno_players.current_user}'s turn!`,
+				embeds: [drawpile.table_embed],
 				components: [game_row],
 			});
 			// read messages
@@ -408,29 +370,15 @@ module.exports = {
 										uno_players.current_user
 								  }'s turn! Dish **${
 										currently_inactive_discard_pile + 1
-								  }** is inactive.\n${drawpile.discardpiles
-										.map((dp, index) => {
-											return {
-												name: `Dish ${index + 1}`,
-												value: `${dp.top_card.emoji} ${
-													dp.top_card.text
-												} ${
-													!dp.active
-														? ` (inactive)`
-														: ``
-												}`,
-											};
-										})
-										.map((d) => `${d.name}: **${d.value}**`)
-										.join(`\n`)}`
+								  }** is inactive.`
 						}`,
+						embeds: [drawpile.table_embed],
 						components: [game_row],
 					});
 					await uno_players.current_player.user.send(
-						`Your hand:\n${
-							uno_players[uno_players.current_turn_index].hand
-								.text(uno_players)
-						}`
+						`Your hand:\n${uno_players[
+							uno_players.current_turn_index
+						].hand.text(uno_players)}`
 					);
 				}
 				/*
@@ -566,7 +514,7 @@ module.exports = {
 				switch (
 					uno_players.playable_on({
 						card_to_play: card_chosen,
-						card: pile_chosen.top_card,
+						card: current_card,
 						effect_list,
 						current_player_flag,
 						jump_in: jump_in_flag,
