@@ -446,6 +446,7 @@ module.exports = {
 							uno_players.draw_stack
 						);
 						// console.log(uno_players.draw_stack);
+
 						await player.user.send(
 							`You drew the following (${
 								uno_players.draw_stack
@@ -466,7 +467,11 @@ module.exports = {
 							player.hand[player.hand.length - 1].text
 						}**.`
 					);
-					await game_channel.send(`${player.user} drew a card.`);
+					await game_channel.send(
+						`${
+							player.user.globalName ?? player.user.username
+						} drew a card.`
+					);
 					await end_turn();
 					return;
 				}
@@ -643,7 +648,7 @@ module.exports = {
 						return;
 					case `ono`:
 						return await game_channel.send(
-							`You can't play that card.`
+							`The plate refuses to accept the card.`
 						);
 					case `overload`:
 						await game_channel.send(
