@@ -28,50 +28,61 @@ module.exports = {
 		});
 		const color_promise = new Promise((resolve) => {
 			console.log(`Awaiting response`);
-			const filter = (m) => m.author.id === player.user.id && (
-				color_keys.includes(
-					m.content.toLowerCase()
-				) ||
-				color_values.includes(
-					m.content.toLowerCase()
-				)
-			); // Only collect messages from the author of the command
+			const filter = (m) =>
+				m.author.id === player.user.id &&
+				(color_keys.includes(m.content.toLowerCase()) ||
+					color_values.includes(m.content.toLowerCase())); // Only collect messages from the author of the command
 			const collector = uno_players.game_channel.createMessageCollector({
 				filter,
 				time: 60000,
-				max: 1
+				max: 1,
 			});
+			let cards_drawn = 1;
 			collector.on("collect", async (collectedMessage) => {
+				await uno_players.game_channel.send(`*Drawing cards...*`);
+
 				const color = collectedMessage.content;
-				let card_drawn = (await uno_players.next_player.draw(uno_players.drawpile, 1))[0]
+				let card_color =
+					uno_players.drawpile[
+						uno_players.drawpile.length - cards_drawn
+					].color;
 				while (
-					card_drawn.color != color &&
-					color_map.get(card_drawn.color) != color
+					card_color != color &&
+					color_map.get(card_color) != color
 				) {
-					console.log(card_drawn.color)
-					console.log(color)
-					console.log(`--`)
-					card_drawn = (await uno_players.next_player.draw(uno_players.drawpile, 1))[0]
+					cards_drawn++;
+					card_color =
+						uno_players.drawpile[
+							uno_players.drawpile.length - cards_drawn
+						].color;
 				}
+				await uno_players.next_player.draw(
+					uno_players.drawpile,
+					cards_drawn
+				);
 				collector.stop();
+				await uno_players.game_channel.send(
+					`${
+						cards_drawn > 18
+							? `# `
+							: cards_drawn > 12
+							? `## `
+							: cards_drawn > 6
+							? `### `
+							: ``
+					}${
+						uno_players.next_player.user.globalName ??
+						uno_players.next_player.user.username
+					} drew ${cards_drawn} cards! ${
+						cards_drawn >= 25 ? `💥` : cards_drawn >= 10 ? `⚠️` : ``
+					}`
+				);
 				resolve();
 			});
 
-			collector.on("end", (collected) => {
+			collector.on("end", async (collected) => {
 				if (collected.size === 0) {
-					uno_players.game_channel.send(
-						"You timed out, the color chosen will be red."
-					);
-					const color = `r`;
-					uno_players.draw_stack++;
-					while (
-						uno_players.drawpile[
-							uno_players.length - uno_players.draw_stack
-						].color != color
-					) {
-						uno_players.draw_stack++;
-					}
-					collector.stop();
+					uno_players.game_channel.send("You timed out.");
 					resolve();
 				}
 			});

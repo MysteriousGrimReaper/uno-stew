@@ -62,7 +62,12 @@ module.exports = {
 	get_hand_collect_reply_fn_stew,
 	data: new SlashCommandBuilder()
 		.setName("unostew")
-		.setDescription("Starts a game of Uno Stew."),
+		.setDescription("Starts a game of Uno Stew.")
+		.addBooleanOption((option) =>
+			option
+				.setName(`league`)
+				.setDescription(`Run a game of standard UNO?`)
+		),
 	async execute(interaction) {
 		if (currently_playing_channels.includes(interaction.channel.id)) {
 			interaction.reply({
@@ -73,9 +78,11 @@ module.exports = {
 		}
 		currently_playing_channels.push(interaction.channel.id);
 		const game_channel = interaction.channel;
+		const league = interaction.options.getBoolean(`league`);
+		console.log(league);
 		const player_list = await create_signup({
 			interaction,
-			game_name: "Uno Stew",
+			game_name: league ? "Uno League" : "Uno Stew",
 			min_players: 2,
 			minutes: 7,
 			rules: [rules_embed],
@@ -292,30 +299,28 @@ module.exports = {
 							`${uno_players.current_user.id}`
 						);
 					}
-					if (uno_players.current_player.hand.length >= 25) {
-						await game_channel.send(
-							`${uno_players.current_user} has perished to the stew... (25 or more cards)`
-						);
-						while (
-							uno_players.current_player.hand.length >
-							(uno_players.current_player.pizza > 0 ? 7 : 0)
-						) {
-							drawpile.unshift(
-								uno_players.current_player.hand.pop()
-							);
-						}
-						if (uno_players.current_player.pizza > 0) {
-							uno_players.current_player.pizza--;
+					uno_players.forEach(async (p) => {
+						if (p.hand.length >= 25) {
 							await game_channel.send(
-								`${uno_players.current_user} has resurrected by the power of pizza! (${uno_players.current_player.pizza} remaining)`
+								`${p.user} has perished to the stew... (25 or more cards)`
 							);
-						} else {
-							uno_players.add_loser(
-								`${uno_players.current_user.id}`
-							);
+							while (p.hand.length > (p.pizza > 0 ? 7 : 0)) {
+								drawpile.unshift(p.hand.pop());
+							}
+							if (p.pizza > 0) {
+								p.pizza--;
+								await game_channel.send(
+									`${uno_players.current_user} has resurrected by the power of pizza! (${p.pizza} remaining)`
+								);
+							} else {
+								uno_players.add_loser(
+									`${uno_players.current_user.id}`
+								);
+							}
+							// console.log(uno_players);
 						}
-						// console.log(uno_players);
-					}
+					});
+
 					currently_inactive_discard_pile =
 						Math.max(1, Math.ceil(Math.random() * 4)) - 1;
 					drawpile.set_new_inactive_discard_pile(
@@ -375,11 +380,10 @@ module.exports = {
 						embeds: [drawpile.table_embed],
 						components: [game_row],
 					});
-					await uno_players.current_player.user.send(
-						`Your hand:\n${uno_players[
-							uno_players.current_turn_index
-						].hand.text(uno_players)}`
-					);
+
+					await uno_players.current_player.user.send({
+						embeds: [uno_players.current_player.init_hand_embed],
+					});
 				}
 				/*
 				console.log(`message: ${message.content}`);
@@ -461,12 +465,7 @@ module.exports = {
 						await end_turn();
 						return;
 					}
-					player.draw(drawpile, 1);
-					await player.user.send(
-						`You drew a **${
-							player.hand[player.hand.length - 1].text
-						}**.`
-					);
+					await player.draw(drawpile, 1);
 					await game_channel.send(
 						`${
 							player.user.globalName ?? player.user.username
