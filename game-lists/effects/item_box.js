@@ -9,6 +9,7 @@ const cards_row = new ActionRowBuilder().addComponents(cards_button);
 module.exports = {
 	name: `box`,
 	text: `Item Box`,
+	wild: true,
 	async effect({ uno_players, pile_chosen, player }) {
 		const pile_index =
 			uno_players.drawpile.discardpiles.indexOf(pile_chosen);

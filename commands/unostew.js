@@ -1,6 +1,6 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 /* eslint-disable no-case-declarations */
-const DEBUG_DECK = true;
+const DEBUG_DECK = false;
 const currently_playing_channels = [];
 const { QuickDB } = require("quick.db");
 const db = new QuickDB();
@@ -459,18 +459,13 @@ module.exports = {
 								.join(`\n- `)}`
 						);
 						await game_channel.send(
-							`${player.user} drew ${uno_players.draw_stack} cards!`
+							`You drew ${uno_players.draw_stack} cards!`
 						);
 						uno_players.draw_stack = 0;
 						await end_turn();
 						return;
 					}
 					await player.draw(drawpile, 1);
-					await game_channel.send(
-						`${
-							player.user.globalName ?? player.user.username
-						} drew a card.`
-					);
 					await end_turn();
 					return;
 				}
@@ -693,6 +688,7 @@ module.exports = {
 						drawpile.discardpiles.indexOf(pile_chosen) + 1
 					}.`,
 				});
+				await wait(500);
 				if (player.hand.length == 0) {
 					await game_channel.send(
 						`${player.user} has escaped the stew!`

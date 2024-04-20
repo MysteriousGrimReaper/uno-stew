@@ -3,6 +3,7 @@ const { ButtonBuilder, ActionRowBuilder, ButtonStyle } = require("discord.js");
 module.exports = {
 	name: `-x2`,
 	text: `Discard All Except 2`,
+	wild: true,
 	async effect({ uno_players, player }) {
 		const cards_button = new ButtonBuilder()
 			.setCustomId(`view-cards`)
@@ -24,7 +25,7 @@ module.exports = {
 					filter: filter2,
 				});
 			button_collector.on(`collect`, async (i) => {
-				await i.deferReply({ephemeral: true})
+				await i.deferReply({ ephemeral: true });
 				await i.editReply({
 					ephemeral: true,
 					content: `${player.hand.default_text}`,
@@ -99,9 +100,8 @@ module.exports = {
 			collector.on("end", (collected) => {
 				if (collected.size === 0) {
 					uno_players.game_channel.send("You timed out.");
-					
 				}
-					button_collector.stop();
+				button_collector.stop();
 				resolve();
 			});
 		});

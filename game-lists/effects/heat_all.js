@@ -1,6 +1,7 @@
 module.exports = {
 	name: `ha`,
 	text: `Heat All`,
+	wild: true,
 	async effect({ uno_players }) {
 		for (let i = 0; i < uno_players.length; i++) {
 			if (

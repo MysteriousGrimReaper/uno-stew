@@ -11,7 +11,6 @@ color_map.set("a", "Amber");
 color_map.set("i", "Ivory");
 const color_keys = [];
 const color_values = [];
-const wait = require("node:timers/promises").setTimeout;
 for (const value of color_map.keys()) {
 	color_keys.push(value);
 }
@@ -22,6 +21,7 @@ for (const value of color_map.values()) {
 module.exports = {
 	name: `+c`,
 	text: `Draw Color`,
+	wild: true,
 	async effect({ uno_players, player }) {
 		await uno_players.game_channel.send({
 			content: `Choose a color for the next player to draw.`,

@@ -289,7 +289,7 @@ class Player {
 		}
 		const draw_embed = new EmbedBuilder()
 			.setTitle(`You drew the following card(s):`)
-			.setDescription(cards_drawn.map((c) => c.text).join(`\n- `))
+			.setDescription(`-` + cards_drawn.map((c) => c.text).join(`\n- `))
 			.setColor(Math.round(0xffffff / cards_drawn.length));
 		await this.user.send({ embeds: [draw_embed] });
 		return cards_drawn;

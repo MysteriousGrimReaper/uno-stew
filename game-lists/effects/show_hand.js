@@ -2,6 +2,7 @@ const { EmbedBuilder } = require("discord.js");
 module.exports = {
 	name: `show`,
 	text: `Show Hand`,
+	wild: true,
 	async effect({ uno_players }) {
 		const player = uno_players.next_player;
 		const hand_embed = new EmbedBuilder()

@@ -1,9 +1,10 @@
 module.exports = {
-	name: `+a2`,
-	text: `All Draw 2`,
+	name: `+k`,
+	text: `Kettle`,
+	wild: true,
 	async effect({ uno_players }) {
-		uno_players.forEach(async player => {
-            await player.draw(uno_players.drawpile, 2)
-        });
+		uno_players.forEach(async (player) => {
+			await player.draw(uno_players.drawpile, 2);
+		});
 	},
 };

@@ -30,6 +30,7 @@ const SECONDS = 20;
 const dance_length = 10;
 module.exports = {
 	name: `da`,
+	wild: true,
 	text: `Dancing`,
 	async effect({ uno_players, message }) {
 		const dancer = uno_players.next_player;

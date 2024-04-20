@@ -1,6 +1,7 @@
 module.exports = {
 	name: `-n`,
 	text: `Discard Number`,
+	wild: true,
 	async effect({ uno_players, player, pile_chosen }) {
 		await uno_players.game_channel.send({
 			content: `Choose a number to discard.`,

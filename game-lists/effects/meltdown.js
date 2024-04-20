@@ -1,6 +1,7 @@
 module.exports = {
-	name: `+md`,
-	text: `Meltdown`,
+	name: `+mc`,
+	text: `Microwave`,
+	wild: true,
 	async effect({ uno_players }) {
 		uno_players.forEach(async (player) => {
 			await player.draw(

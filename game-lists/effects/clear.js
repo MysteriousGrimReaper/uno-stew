@@ -20,6 +20,7 @@ function shuffle(array) {
 module.exports = {
 	name: `cl`,
 	text: `Clear`,
+	wild: true,
 	async effect({ uno_players, pile_chosen }) {
 		while (pile_chosen.length > 1) {
 			uno_players.drawpile.push(pile_chosen.shift());

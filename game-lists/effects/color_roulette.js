@@ -22,6 +22,7 @@ for (const value of color_map.values()) {
 module.exports = {
 	name: `+cr`,
 	text: `Color Roulette`,
+	wild: true,
 	async effect({ uno_players }) {
 		uno_players.step();
 		await uno_players.game_channel.send({
