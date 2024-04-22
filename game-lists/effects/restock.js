@@ -3,6 +3,8 @@ const { ButtonBuilder, ActionRowBuilder, ButtonStyle } = require("discord.js");
 module.exports = {
 	name: `-+`,
 	text: `Restock`,
+	wild: true,
+	// level: 2,
 	async effect({ uno_players, player }) {
 		const cards_to_draw = player.hand.length - 3;
 		const cards_button = new ButtonBuilder()
@@ -28,7 +30,7 @@ module.exports = {
 				await i.deferReply({ ephemeral: true });
 				await i.editReply({
 					ephemeral: true,
-					content: `${player.hand.default_text}`,
+					content: `${player.hand_embed(uno_players)}`,
 				});
 			});
 			button_collector.on(`ignore`, async (i) => {
@@ -76,8 +78,8 @@ module.exports = {
 									.findIndex(
 										(d) =>
 											d.wild ||
-											d.color == card_chosen.color ||
-											d.icon == card_chosen.icon
+											d.color == card_chosen?.color ||
+											d.icon == card_chosen?.icon
 									)
 						  ] ?? uno_players.drawpile.discardpiles[0];
 				if (!card_chosen || !pile_chosen) {
@@ -91,12 +93,16 @@ module.exports = {
 				collector.stop();
 			});
 
-			collector.on("end", (collected) => {
+			collector.on("end", async (collected) => {
 				if (collected.size === 0) {
 					uno_players.game_channel.send("You timed out.");
 				}
 				button_collector.stop();
+				await uno_players.game_channel.send(
+					`You discarded the rest of your hand onto the pile.`
+				);
 				player.draw(uno_players.drawpile, cards_to_draw);
+
 				resolve();
 			});
 		});

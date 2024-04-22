@@ -1,6 +1,8 @@
 module.exports = {
 	name: `wn`,
 	text: `Wild Number`,
+	level: 5,
+	wild: false,
 	async effect({ uno_players, player, pile_chosen }) {
 		await uno_players.game_channel.send({
 			content: `Choose a number to set this card's value to.`,

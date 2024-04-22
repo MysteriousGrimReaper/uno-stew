@@ -4,6 +4,7 @@ module.exports = {
 	name: `hu`,
 	text: `Hurry Up!`,
 	wild: true,
+	level: 6,
 	async effect({ uno_players }) {
 		await uno_players.game_channel.send(
 			`# **Hurry Up!** You have 7 seconds to place your cards.`

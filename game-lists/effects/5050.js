@@ -2,6 +2,7 @@ const wait = require("node:timers/promises").setTimeout;
 module.exports = {
 	name: `50`,
 	text: `50/50`,
+	level: 3,
 	wild: true,
 	async effect({ uno_players, player }) {
 		let heads;

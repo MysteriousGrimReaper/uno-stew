@@ -1,6 +1,7 @@
 module.exports = {
 	name: `fl`,
 	text: `Flip`,
+	level: 2,
 	async effect({ uno_players }) {
 		uno_players.forEach((p) => {
 			p.hand.flip();

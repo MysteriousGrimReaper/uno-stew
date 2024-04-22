@@ -3,6 +3,7 @@ const { ButtonBuilder, ActionRowBuilder, ButtonStyle } = require("discord.js");
 module.exports = {
 	name: `-rc`,
 	text: `Repeat Colour Discard`,
+	level: 5,
 	wild: false,
 	async effect({ uno_players, player, card_chosen }) {
 		const find_same_color = player.hand.filter(

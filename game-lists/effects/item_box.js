@@ -10,6 +10,7 @@ module.exports = {
 	name: `box`,
 	text: `Item Box`,
 	wild: true,
+	level: 6,
 	async effect({ uno_players, pile_chosen, player }) {
 		const pile_index =
 			uno_players.drawpile.discardpiles.indexOf(pile_chosen);

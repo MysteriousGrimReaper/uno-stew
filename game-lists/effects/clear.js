@@ -20,6 +20,7 @@ function shuffle(array) {
 module.exports = {
 	name: `cl`,
 	text: `Clear`,
+	level: 4,
 	wild: true,
 	async effect({ uno_players, pile_chosen }) {
 		while (pile_chosen.length > 1) {

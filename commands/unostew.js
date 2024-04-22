@@ -243,24 +243,27 @@ module.exports = {
 				}
 				const current_player_flag =
 					user_index == uno_players.current_turn_index;
-				switch (message.content.toLowerCase()) {
-					case `uno!`:
-						if (player.hand.length == 1) {
-							player.uno_callable = false;
-							await game_channel.send(
-								`**UNO!!** ${player.user} has one card left!`
-							);
-						}
-						const uno_callout_player = uno_players.find(
-							(p) => p.hand.length == 1 && p.uno_callable
+				if (
+					message.content.toLowerCase().includes(`uno!`) ||
+					message.content.toLowerCase().includes(`&&!`)
+				) {
+					if (player.hand.length == 1) {
+						player.uno_callable = false;
+						await game_channel.send(
+							`**UNO!!** ${player.user} has one card left!`
 						);
-						if (uno_callout_player) {
-							await game_channel.send(
-								`${uno_callout_player.user} didn't say Uno! Draw 2 cards.`
-							);
-							uno_callout_player.draw(drawpile, 2);
-						}
-						break;
+					}
+				}
+				if (message.content.toLowerCase().includes(`callout`)) {
+					const uno_callout_player = uno_players.find(
+						(p) => p.hand.length == 1 && p.uno_callable
+					);
+					if (uno_callout_player) {
+						await game_channel.send(
+							`${uno_callout_player.user} didn't say Uno! Draw 2 cards.`
+						);
+						uno_callout_player.draw(drawpile, 2);
+					}
 				}
 
 				const args = message.content.split(` `);
@@ -370,7 +373,7 @@ module.exports = {
 					await game_channel.send({
 						content: `${
 							uno_players.draw_stack > 0
-								? `You have been draw attacked, ${uno_players.current_user}! Type \`draw\` to draw **${uno_players.draw_stack}** cards or stack by playing a draw card with equal or higher value.`
+								? `You have been draw attacked, ${uno_players.current_user}! Type \`draw\` to draw **${uno_players.draw_stack}** cards play another draw card with equal or higher value.`
 								: `It is now ${
 										uno_players.current_user
 								  }'s turn! Dish **${
@@ -444,6 +447,7 @@ module.exports = {
 						message.content.toLowerCase() == `d`) &&
 					current_player_flag
 				) {
+					uno_players.draw_check = 0;
 					if (uno_players.draw_stack > 0) {
 						const draws = await player.draw(
 							drawpile,

@@ -1,6 +1,7 @@
 module.exports = {
 	name: `xh`,
 	text: `Extreme Heat`,
+	level: 3,
 	async effect({ uno_players, player }) {
 		if (uno_players.length == 2) {
 			await uno_players.game_channel.send(`You heated up your opponent.`);

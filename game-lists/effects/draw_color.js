@@ -22,6 +22,7 @@ module.exports = {
 	name: `+c`,
 	text: `Draw Color`,
 	wild: true,
+	level: 4,
 	async effect({ uno_players, player }) {
 		await uno_players.game_channel.send({
 			content: `Choose a color for the next player to draw.`,

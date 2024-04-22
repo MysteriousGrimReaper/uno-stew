@@ -4,6 +4,7 @@ module.exports = {
 	name: `-x2`,
 	text: `Discard All Except 2`,
 	wild: true,
+	level: 5,
 	async effect({ uno_players, player }) {
 		const cards_button = new ButtonBuilder()
 			.setCustomId(`view-cards`)

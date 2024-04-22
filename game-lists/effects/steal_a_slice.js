@@ -1,6 +1,7 @@
 module.exports = {
 	name: `steal`,
 	text: `Steal A Slice`,
+	level: 3,
 	wild: true,
 	async effect({ uno_players, player }) {
 		if (uno_players.length == 2) {

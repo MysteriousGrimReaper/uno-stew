@@ -2,6 +2,7 @@ const { EmbedBuilder } = require("discord.js");
 module.exports = {
 	name: `fs`,
 	text: `Foresight`,
+	level: 1,
 	async effect({ uno_players, player }) {
 		await uno_players.game_channel.send(
 			`${

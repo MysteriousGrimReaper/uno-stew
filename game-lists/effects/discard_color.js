@@ -2,6 +2,7 @@ module.exports = {
 	name: `-c`,
 	text: `Discard Color`,
 	wild: false,
+	level: 5,
 	async effect({ uno_players, card_chosen, pile_chosen, player }) {
 		const init_hand_length = player.hand.length;
 		player.discard_color(card_chosen.front.color, pile_chosen);

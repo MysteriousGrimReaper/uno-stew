@@ -1,6 +1,7 @@
 module.exports = {
 	name: `@+4`,
 	text: `Targeted Draw 4`,
+	level: 3,
 	wild: true,
 	async effect({ uno_players, player }) {
 		await uno_players.game_channel.send(

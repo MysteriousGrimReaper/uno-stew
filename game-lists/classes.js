@@ -124,6 +124,8 @@ class CardFace {
 		const possible_flex_color_array = color_keys
 			.toSpliced(color_keys.indexOf(color), 1)
 			.toSpliced(-1);
+		this.flex = flex;
+		/*
 		this.flex =
 			this.color == `w`
 				? false
@@ -136,6 +138,7 @@ class CardFace {
 						)
 				  ]
 				: false;
+				*/
 		this.wild_colors =
 			this.color == `w`
 				? shuffleArray(color_keys.filter((c) => c != `w`)).slice(6)
@@ -289,7 +292,7 @@ class Player {
 		}
 		const draw_embed = new EmbedBuilder()
 			.setTitle(`You drew the following card(s):`)
-			.setDescription(`-` + cards_drawn.map((c) => c.text).join(`\n- `))
+			.setDescription(`- ` + cards_drawn.map((c) => c.text).join(`\n- `))
 			.setColor(Math.round(0xffffff / cards_drawn.length));
 		await this.user.send({ embeds: [draw_embed] });
 		return cards_drawn;
@@ -383,6 +386,7 @@ class DrawPile extends Array {
 		super();
 		this.currently_inactive_discard_pile = 0;
 		this.discardpiles = [];
+		this.activate_all_discard_piles();
 	}
 	activate_all_discard_piles() {
 		this.discardpiles.forEach((dp) => (dp.active = true));
@@ -394,7 +398,11 @@ class DrawPile extends Array {
 	}
 	set_new_inactive_discard_pile(index) {
 		this.activate_all_discard_piles();
-		this.set_inactive_discard_pile(index);
+		const dont_deactivate = true;
+		if (!dont_deactivate) {
+			this.set_inactive_discard_pile(index);
+		}
+
 		return this;
 	}
 	update_discard_pile() {
@@ -570,6 +578,7 @@ class PlayerManager extends Array {
 		this.attack_counter = 1;
 		this.effect_list = [];
 		this.popcorn_users = [];
+		this.draw_check = 0;
 	}
 	/**
 	 * Dials up the oven (Attack d10).
@@ -772,14 +781,13 @@ class PlayerManager extends Array {
 		if (
 			!normal_flag &&
 			card_to_play.icon == `wn` &&
-			/^[0-9]$/.test(card?.icon)
+			/^[0-9]$/.test(card?.icon) // edit this to be 0-23
 		) {
 			card_to_play.icon = card.icon;
 			wild_number_change_flag = true;
 		}
 		const draw_number_flag =
-			parseInt(card_to_play?.icon?.slice(1)) >=
-				parseInt(card?.icon?.slice(1)) &&
+			parseInt(card_to_play?.icon?.slice(1)) >= this.draw_check &&
 			card.icon[0] == card_to_play.icon[0] &&
 			card.icon[0] == `+`;
 		const draw_state = this.draw_stack > 0;

@@ -3,6 +3,7 @@ module.exports = {
 	name: `show`,
 	text: `Show Hand`,
 	wild: true,
+	level: 1,
 	async effect({ uno_players }) {
 		const player = uno_players.next_player;
 		const hand_embed = new EmbedBuilder()

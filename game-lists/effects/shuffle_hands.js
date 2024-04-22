@@ -21,6 +21,7 @@ module.exports = {
 	name: `shuf`,
 	text: `Shuffle Hands`,
 	wild: true,
+	level: 4,
 	async effect({ uno_players }) {
 		const card_distributor = [];
 		const hand_lengths = uno_players.map((p) => p.hand.length);

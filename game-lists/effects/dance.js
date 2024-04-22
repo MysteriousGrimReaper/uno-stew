@@ -32,6 +32,7 @@ module.exports = {
 	name: `da`,
 	wild: true,
 	text: `Dancing`,
+	level: 6,
 	async effect({ uno_players, message }) {
 		const dancer = uno_players.next_player;
 		const dance_emojis = [

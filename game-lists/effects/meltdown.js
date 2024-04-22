@@ -2,6 +2,7 @@ module.exports = {
 	name: `+mc`,
 	text: `Microwave`,
 	wild: true,
+	level: 4,
 	async effect({ uno_players }) {
 		uno_players.forEach(async (player) => {
 			await player.draw(

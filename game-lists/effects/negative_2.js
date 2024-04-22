@@ -1,6 +1,7 @@
 module.exports = {
 	name: `-2`,
 	text: `Negative 2`,
+	level: 4,
 	async effect({ uno_players, pile_chosen }) {
 		const discarder = uno_players.next_player;
 		pile_chosen.push(

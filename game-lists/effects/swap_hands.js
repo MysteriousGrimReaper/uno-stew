@@ -1,6 +1,7 @@
 module.exports = {
 	name: `sh`,
 	text: `Swap Hands`,
+	level: 3,
 	wild: true,
 	async effect({ uno_players }) {
 		const first_hand = uno_players[0].hand;

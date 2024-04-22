@@ -1,6 +1,7 @@
 module.exports = {
 	name: `@+2`,
 	text: `Targeted Draw 2`,
+	level: 3,
 	async effect({ uno_players, player }) {
 		await uno_players.game_channel.send(
 			`${player.user}, type the name of a player to force them to draw 2 cards.`
@@ -21,18 +22,16 @@ module.exports = {
 					await collectedMessage.reply(
 						`${target_player.user}, draw two cards.`
 					);
-					target_player.draw(uno_players.drawpile, 2)
+					target_player.draw(uno_players.drawpile, 2);
 					collector.stop();
 				}
 			});
 
 			collector.on("end", (collected) => {
 				if (collected.size === 0) {
-					uno_players.game_channel.send(
-						"You timed out."
-					);
+					uno_players.game_channel.send("You timed out.");
 				}
-                resolve();
+				resolve();
 			});
 		});
 		await trade_hands_promise;
