@@ -139,6 +139,7 @@ module.exports = {
 			const message_collector = game_channel.createMessageCollector({
 				filter,
 			});
+			let last_interaction_processed_time = new Date();
 			// (hand/table/players) button input processing
 			hand_collect_reply_fn = async (i) => {
 				const { customId } = i;
@@ -195,11 +196,11 @@ module.exports = {
 						});
 				}
 			};
-			let currently_inactive_discard_pile =
+			/* let currently_inactive_discard_pile =
 				Math.max(1, Math.ceil(Math.random() * 4)) - 1;
 			drawpile.set_new_inactive_discard_pile(
 				currently_inactive_discard_pile
-			);
+			);*/
 			// update this to be an embed
 			await game_channel.send({
 				content: `It is now ${uno_players.current_user}'s turn!`,
@@ -220,6 +221,41 @@ module.exports = {
 				if (cooldown) {
 					return;
 				}
+				if (
+					new Date().getTime() -
+						last_interaction_processed_time.getTime() <
+						1000 * 60 * 2 &&
+					message.content.includes(`timeout`)
+				) {
+					last_interaction_processed_time = new Date();
+					const player = uno_players.current_player;
+					uno_players.draw_check = 0;
+					if (uno_players.draw_stack > 0) {
+						const draws = await player.draw(
+							drawpile,
+							uno_players.draw_stack
+						);
+						// console.log(uno_players.draw_stack);
+
+						await player.user.send(
+							`You drew the following (${
+								uno_players.draw_stack
+							}) cards:\n- ${draws
+								.map((card) => card.text)
+								.join(`\n- `)}`
+						);
+						await game_channel.send(
+							`You drew ${uno_players.draw_stack} cards!`
+						);
+						uno_players.draw_stack = 0;
+						await end_turn();
+						return;
+					}
+					await player.draw(drawpile, 1);
+					await end_turn();
+					return;
+				}
+				last_interaction_processed_time = new Date();
 				cooldown = true;
 				if (
 					message.author.id == interaction.user.id &&
@@ -324,11 +360,11 @@ module.exports = {
 						}
 					});
 
-					currently_inactive_discard_pile =
+					/* currently_inactive_discard_pile =
 						Math.max(1, Math.ceil(Math.random() * 4)) - 1;
 					drawpile.set_new_inactive_discard_pile(
 						currently_inactive_discard_pile
-					);
+					);*/
 					if (player.hand.length == 1) {
 						player.uno_callable = true;
 					} else {
@@ -374,11 +410,7 @@ module.exports = {
 						content: `${
 							uno_players.draw_stack > 0
 								? `You have been draw attacked, ${uno_players.current_user}! Type \`draw\` to draw **${uno_players.draw_stack}** cards play another draw card with equal or higher value.`
-								: `It is now ${
-										uno_players.current_user
-								  }'s turn! Dish **${
-										currently_inactive_discard_pile + 1
-								  }** is inactive.`
+								: `It is now ${uno_players.current_user}'s turn!`
 						}`,
 						embeds: [drawpile.table_embed],
 						components: [game_row],
