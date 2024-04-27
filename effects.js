@@ -356,7 +356,7 @@ let card_list = [
  * 5 - popcorn/flex and discards, cards up to 23 (all popcorn, popcorn, flip, discard color, discard number, repeat color discard, wild number, discard until 2)
  * 6 - cruelty (hurry up, item box, dance, 99)
  */
-const max_level = 6;
+const max_level = 999;
 if (max_level > 7) {
 	card_list = [...card_list, ...extra_card_list];
 }

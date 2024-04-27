@@ -223,6 +223,26 @@ class Player {
 	get id() {
 		return this.user.id;
 	}
+	get hand_color() {
+		if (this.hand.length > 20) {
+			return 0x303030;
+		}
+		if (this.hand.length > 15) {
+			return 0xf74545;
+		}
+		if (this.hand.length > 10) {
+			return 0xf4f745;
+		}
+		if (this.hand.length > 5) {
+			return 0x45f748;
+		}
+		return 0x00eaff;
+	}
+	get name() {
+		return (
+			this.user.globalName ?? this.member.nickname ?? this.user.username
+		);
+	}
 	get init_hand_embed() {
 		const avatar = this.user.displayAvatarURL();
 		return new EmbedBuilder()
@@ -232,6 +252,7 @@ class Player {
 				name: this.user.username,
 				iconURL: avatar,
 			})
+			.setColor(this.hand_color)
 			.setFooter({
 				text: `${this.hand.length} cards | ${`🍕`.repeat(
 					this.pizza
@@ -247,6 +268,7 @@ class Player {
 				name: this.user.username,
 				iconURL: avatar,
 			})
+			.setColor(this.hand_color)
 			.setFooter({
 				text: `${this.hand.length} cards | ${`🍕`.repeat(
 					this.pizza
@@ -290,10 +312,13 @@ class Player {
 		} else {
 			this.uno_callable = false;
 		}
+		const color_index = Math.round(0xff / cards_drawn.length);
 		const draw_embed = new EmbedBuilder()
 			.setTitle(`You drew the following card(s):`)
 			.setDescription(`- ` + cards_drawn.map((c) => c.text).join(`\n- `))
-			.setColor(Math.round(0xffffff / cards_drawn.length));
+			.setColor(
+				color_index + color_index * 0x100 + color_index * 0x10000
+			);
 		await this.user.send({ embeds: [draw_embed] });
 		return cards_drawn;
 	}
@@ -389,7 +414,12 @@ class DrawPile extends Array {
 		this.activate_all_discard_piles();
 	}
 	activate_all_discard_piles() {
-		this.discardpiles.forEach((dp) => (dp.active = true));
+		this.discardpiles.forEach((dp) => {
+			dp.active = true;
+			if (dp.top_card.icon == `stop`) {
+				dp.active = false;
+			}
+		});
 		return this;
 	}
 	set_inactive_discard_pile(index) {

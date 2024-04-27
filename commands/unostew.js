@@ -332,7 +332,7 @@ module.exports = {
 				async function end_turn() {
 					if (drawpile.check_match()) {
 						await game_channel.send(
-							`${uno_players.current_user} has escaped the kitchen!`
+							`${uno_players.current_user} has escaped the kitchen! (All piles match in color or symbol)`
 						);
 						uno_players.add_winner(
 							`${uno_players.current_user.id}`
@@ -349,12 +349,10 @@ module.exports = {
 							if (p.pizza > 0) {
 								p.pizza--;
 								await game_channel.send(
-									`${uno_players.current_user} has resurrected by the power of pizza! (${p.pizza} remaining)`
+									`${p.name} has resurrected by the power of pizza! (${p.pizza} remaining)`
 								);
 							} else {
-								uno_players.add_loser(
-									`${uno_players.current_user.id}`
-								);
+								uno_players.add_loser(`${p.user.id}`);
 							}
 							// console.log(uno_players);
 						}
@@ -439,7 +437,11 @@ module.exports = {
 						console.log(`removed card at index ${removal_index}`);
 						return;
 					}
-					// debug command, add a card
+					const card_parse =
+						`{"color":"${args[2]}","icon":"${args[3]}"` +
+						(args[4] ? `,"flex":"${args[4]}"` : ``) +
+						`}`;
+					// debug command, add a card (in json notation)
 					if (message.content.includes(`debug addcard`)) {
 						try {
 							player.hand.push(
@@ -456,6 +458,45 @@ module.exports = {
 								`Added card \`${
 									player.hand[player.hand.length - 1].text
 								}\` to your hand.`
+							);
+						} catch (error) {
+							await player.user.send(
+								`An error occurred: ${error}`
+							);
+						}
+					}
+					// add a card (in spaced notation)
+					if (message.content.includes(`debug +card`)) {
+						try {
+							player.hand.push(
+								new Card(
+									new CardFace(JSON.parse(card_parse)),
+									new CardFace(JSON.parse(card_parse))
+								)
+							);
+							await game_channel.send(
+								`Added card \`${
+									player.hand[player.hand.length - 1].text
+								}\` to your hand.`
+							);
+						} catch (error) {
+							await player.user.send(
+								`An error occurred: ${error}`
+							);
+						}
+					}
+					if (message.content.includes(`debug deckcard`)) {
+						try {
+							drawpile.push(
+								new Card(
+									new CardFace(JSON.parse(card_parse)),
+									new CardFace(JSON.parse(card_parse))
+								)
+							);
+							await game_channel.send(
+								`Added card \`${
+									player.hand[player.hand.length - 1].text
+								}\` to the top of the drawpile.`
 							);
 						} catch (error) {
 							await player.user.send(
@@ -533,8 +574,8 @@ module.exports = {
 						card_chosen,
 						pile_chosen,
 						player,
-						currently_inactive_discard_pile,
 						message,
+						pile_index: drawpile.discardpiles.indexOf(pile_chosen),
 					});
 					uno_players.input_state = false;
 				};

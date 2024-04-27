@@ -1,4 +1,5 @@
 const color_map = new Map();
+
 const wait = require("node:timers/promises").setTimeout;
 color_map.set("r", "Red");
 color_map.set("b", "Blue");
@@ -10,6 +11,24 @@ color_map.set("o", "Orange");
 color_map.set("s", "Silver");
 color_map.set("a", "Amber");
 color_map.set("i", "Ivory");
+const color_index = new Map();
+color_index.set("r", 0xe01414);
+color_index.set("b", 0x1447e0);
+color_index.set("g", 0x31f51b);
+color_index.set("y", 0xdee609);
+color_index.set("m", 0x6909e6);
+color_index.set("o", 0xfa7507);
+color_index.set("p", 0xe609d4);
+color_index.set("s", 0xc0c0c0);
+color_index.set("i", 0xfffff0);
+color_index.set("a", 0xffbf00);
+color_index.set("w", 0x2e2e2e);
+const {
+	EmbedBuilder,
+	ButtonBuilder,
+	ActionRowBuilder,
+	ButtonStyle,
+} = require("discord.js");
 const color_keys = [];
 const color_values = [];
 for (const value of color_map.keys()) {
@@ -44,7 +63,7 @@ module.exports = {
 				const color = collectedMessage.content;
 				const public_cards_message =
 					await uno_players.game_channel.send(
-						`${uno_players.current_player.user} will draw the following cards:\n`
+						`${uno_players.current_player.name} will draw the following cards:\n`
 					);
 				const cards_drawn = [];
 				while (
@@ -52,14 +71,22 @@ module.exports = {
 					color_map.get(cards_drawn[0]?.color) != color
 				) {
 					cards_drawn.unshift(uno_players.drawpile.pop());
-					await public_cards_message.edit(
-						`${
-							uno_players.current_player.user
-						} will draw the following cards:\n- ${cards_drawn
-							.map((c) => c.text)
-							.join(`\n- `)}`
-					);
-					await wait(500);
+					const pdraw_embed = new EmbedBuilder()
+						.setTitle(`Looking for: ${color_map.get(color)}`)
+						.setDescription(
+							`- ` +
+								cards_drawn
+									.map((c) => c.text)
+									.reverse()
+									.join(`\n- `)
+						)
+						.setFooter({ text: `${cards_drawn.length} cards` })
+						.setColor(color_index.get(cards_drawn[0]?.color));
+					await public_cards_message.edit({
+						content: `${uno_players.current_player.name} will draw the following cards:`,
+						embeds: [pdraw_embed],
+					});
+					await wait(1000);
 				}
 				uno_players.current_player.hand.push(...cards_drawn);
 				collector.stop();

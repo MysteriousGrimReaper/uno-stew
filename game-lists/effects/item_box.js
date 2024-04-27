@@ -25,7 +25,7 @@ module.exports = {
 				break;
 			case `g`:
 				await game_channel.send(
-					`You got a **green shell**! Name a player to make them draw a card.`
+					`You got a **green shell**! Name a player to make them draw 2 cards.`
 				);
 				const green_shell_promise = new Promise((resolve) => {
 					const filter = (m) =>
@@ -46,7 +46,10 @@ module.exports = {
 							collectedMessage.content.toLowerCase()
 						);
 						if (target_player) {
-							await target_player.draw(uno_players.drawpile);
+							await target_player.draw(uno_players.drawpile, 2);
+							await uno_players.game_channel.send(
+								`${target_player.name} drew a card!`
+							);
 							collector.stop();
 							resolve(); // Resolve the promise when the condition is met
 						}

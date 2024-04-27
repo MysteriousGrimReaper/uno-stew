@@ -6,7 +6,9 @@ module.exports = {
 	async effect({ uno_players }) {
 		if (uno_players.draw_stack > 0) {
 			uno_players.draw_stack = 0;
-			await uno_players.game_channel.send(`You blocked the stack!`);
+			await uno_players.game_channel.send(
+				`**You blocked the stack! 🛡️**`
+			);
 		}
 	},
 };

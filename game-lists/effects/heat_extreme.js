@@ -38,15 +38,7 @@ module.exports = {
 
 			collector.on("end", (collected) => {
 				if (collected.size === 0) {
-					uno_players.game_channel.send(
-						"You timed out. Heating up another player..."
-					);
-					const target_player = uno_players.next_player;
-					uno_players.game_channel.send(
-						`You heated up ${target_player.user}.`
-					);
-					uno_players.attack(2, target_player);
-
+					uno_players.game_channel.send("You timed out.");
 					collector.stop();
 					resolve(); // Resolve the promise when the condition is met
 				}

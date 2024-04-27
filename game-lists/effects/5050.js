@@ -41,7 +41,7 @@ module.exports = {
 					return;
 				}
 				const coin_flip_message = await uno_players.game_channel.send(
-					`Flipping coin...\n🪙${heads.user}\n▪️${tails.user}`
+					`Flipping coin...\n🪙${heads.name}\n▪️${tails.name}`
 				);
 				let flips = 2 + Math.ceil(Math.random() * 10);
 				let side_index = 0;
@@ -53,8 +53,8 @@ module.exports = {
 					coin_flip_message.edit(
 						`Flipping coin...${
 							side_index == 1
-								? `\n🪙${heads.user}\n▪️${tails.user}`
-								: `\n▪️${heads.user}\n🪙${tails.user}`
+								? `\n🪙 ${heads.name}\n▪️ ${tails.name}`
+								: `\n▪️ ${heads.name}\n🪙 ${tails.name}`
 						}`
 					);
 				}
@@ -63,7 +63,7 @@ module.exports = {
 				const player_who_draws = side == `heads` ? tails : heads;
 				await wait(500);
 				await uno_players.game_channel.send(
-					`The coin lands **${side}**! ${player_who_draws.user}, draw 4 cards.`
+					`The coin lands **${side}**! ${player_who_draws.name}, draw 4 cards.`
 				);
 				await player_who_draws.draw(uno_players.drawpile, 4);
 				resolve();
@@ -80,5 +80,6 @@ module.exports = {
 			});
 		});
 		await coin_promise;
+		await wait(500);
 	},
 };
