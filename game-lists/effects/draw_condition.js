@@ -76,7 +76,7 @@ module.exports = {
 	text: `Draw Condition`,
 	wild: true,
 	level: 4,
-	async effect({ uno_players, player }) {
+	async effect({ uno_players }) {
 		const condition =
 			conditions[Math.floor(Math.random() * conditions.length)];
 		await uno_players.game_channel.send({
