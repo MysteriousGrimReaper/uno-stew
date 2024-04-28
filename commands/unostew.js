@@ -330,14 +330,6 @@ module.exports = {
 				];
 				// end of turn function
 				async function end_turn() {
-					if (drawpile.check_match()) {
-						await game_channel.send(
-							`${uno_players.current_user} has escaped the kitchen! (All piles match in color or symbol)`
-						);
-						uno_players.add_winner(
-							`${uno_players.current_user.id}`
-						);
-					}
 					uno_players.forEach(async (p) => {
 						if (p.hand.length >= 25) {
 							await game_channel.send(
@@ -355,6 +347,12 @@ module.exports = {
 								uno_players.add_loser(`${p.user.id}`);
 							}
 							// console.log(uno_players);
+						}
+						if (p.win_by_match) {
+							await game_channel.send(
+								`${p.user} has escaped the kitchen! (All piles match in color or symbol)`
+							);
+							uno_players.add_winner(`${p.user.id}`);
 						}
 					});
 
@@ -758,6 +756,9 @@ module.exports = {
 				}
 				// playing the card
 				player.play(card_chosen, pile_chosen);
+				if (drawpile.check_match()) {
+					player.win_by_match = true;
+				}
 				await game_channel.send({
 					content: `${
 						player.user.globalName ?? player.user.username
