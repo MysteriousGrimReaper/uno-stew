@@ -167,16 +167,15 @@ module.exports = {
 					case `unostew_players`:
 						await i.reply({
 							content: `Current player: ${
-								uno_players.current_user.globalName ??
-								uno_players.current_user.username
+								uno_players.current_player.name
 							}\nHere are the hands and statuses of all players:\n${uno_players
 								.map(
 									(p) =>
-										`## ${
-											p.user.globalName ?? p.user.username
-										} ${`🍕`.repeat(p.pizza)}${`🍿`.repeat(
-											p.popcorn
-										)}\n${p.hand.back_text}`
+										`## ${p.name} ${`🍕`.repeat(
+											p.pizza
+										)}${`🍿`.repeat(p.popcorn)}\n${
+											p.hand.back_text
+										}`
 								)
 								.join(
 									`\n`
@@ -186,7 +185,7 @@ module.exports = {
 										(uno_players.current_turn_index == ci
 											? `**`
 											: ``) +
-										(p.user.globalName ?? p.user.username) +
+										p.name +
 										(uno_players.current_turn_index == ci
 											? `**`
 											: ``)
@@ -216,6 +215,37 @@ module.exports = {
 			message_collector.on(`collect`, async () => {
 				await wait(cooldown_timer * 1000);
 				cooldown = false;
+			});
+			// uno! collector
+			message_collector.on(`collect`, async (message) => {
+				const player = uno_players.find(
+					(p) => p.user.id == message.author.id
+				);
+				if (!player) {
+					return;
+				}
+				if (
+					message.content.toLowerCase().includes(`uno!`) ||
+					message.content.toLowerCase().includes(`&&!`)
+				) {
+					if (player.hand.length == 1) {
+						player.uno_callable = false;
+						await game_channel.send(
+							`**UNO!!** ${player.user} has one card left!`
+						);
+					}
+				}
+				if (message.content.toLowerCase().includes(`callout`)) {
+					const uno_callout_player = uno_players.find(
+						(p) => p.hand.length == 1 && p.uno_callable
+					);
+					if (uno_callout_player) {
+						await game_channel.send(
+							`${uno_callout_player.user} didn't say Uno! Draw 2 cards.`
+						);
+						uno_callout_player.draw(drawpile, 2);
+					}
+				}
 			});
 			message_collector.on(`collect`, async (message) => {
 				if (cooldown) {
@@ -279,39 +309,18 @@ module.exports = {
 				}
 				const current_player_flag =
 					user_index == uno_players.current_turn_index;
-				if (
-					message.content.toLowerCase().includes(`uno!`) ||
-					message.content.toLowerCase().includes(`&&!`)
-				) {
-					if (player.hand.length == 1) {
-						player.uno_callable = false;
-						await game_channel.send(
-							`**UNO!!** ${player.user} has one card left!`
-						);
-					}
-				}
-				if (message.content.toLowerCase().includes(`callout`)) {
-					const uno_callout_player = uno_players.find(
-						(p) => p.hand.length == 1 && p.uno_callable
-					);
-					if (uno_callout_player) {
-						await game_channel.send(
-							`${uno_callout_player.user} didn't say Uno! Draw 2 cards.`
-						);
-						uno_callout_player.draw(drawpile, 2);
-					}
-				}
 
 				const args = message.content.split(` `);
 
 				// console.log(player.hand);
-				const jump_in_flag = args.find(
-					(argument) =>
-						/^j$/.test(argument) || /^jump$/.test(argument)
-				);
-				const sum_flag = args.find((argument) =>
-					/^sum$/.test(argument)
-				);
+				const jump_in_flag =
+					args.find(
+						(argument) =>
+							/^j$/.test(argument) || /^jump$/.test(argument)
+					) != undefined;
+				const sum_flag =
+					args.find((argument) => /^sum$/.test(argument)) !=
+					undefined;
 				const pile_indicator = args.find((argument) =>
 					/^d[1-4]$/.test(argument)
 				);
@@ -330,6 +339,7 @@ module.exports = {
 				];
 				// end of turn function
 				async function end_turn() {
+					uno_players.update_discard_piles();
 					uno_players.forEach(async (p) => {
 						if (p.hand.length >= 25) {
 							await game_channel.send(
@@ -361,19 +371,14 @@ module.exports = {
 					drawpile.set_new_inactive_discard_pile(
 						currently_inactive_discard_pile
 					);*/
-					if (player.hand.length == 1) {
-						player.uno_callable = true;
-					} else {
-						player.uno_callable = false;
-					}
+
 					if (uno_players.winners_list.length > 0) {
 						await game_channel.send(
 							`## Congratulations to ${uno_players.winners_list[0].user} for winning!\nHave some chocolate! :chocolate_bar:`
 						);
 						await db.set(
 							`${uno_players.winners_list[0].user.id}.name`,
-							uno_players.winners_list[0].user.globalName ??
-								uno_players.winners_list[0].user.username
+							uno_players.winners_list[0].name
 						);
 						await db.add(
 							`${uno_players.winners_list[0].user.id}.wins`,
@@ -389,8 +394,7 @@ module.exports = {
 						);
 						await db.set(
 							`${uno_players[0].user}.name`,
-							uno_players[0].user.globalName ??
-								uno_players[0].user.username
+							uno_players[0].name
 						);
 						await db.add(
 							`${uno_players.winners_list[0].user.id}.wins`,
@@ -609,9 +613,7 @@ module.exports = {
 					case `jump-in`:
 						player.play(card_chosen, pile_chosen);
 						await game_channel.send(
-							`${
-								player.user.globalName ?? player.user.username
-							} jumped in with a **${card_chosen.text}**!`
+							`${player.name} jumped in with a **${card_chosen.text}**!`
 						);
 						if (current_player_flag && player.hand.length > 1) {
 							await game_channel.send(
@@ -661,8 +663,7 @@ module.exports = {
 										);
 										await uno_players.game_channel.send({
 											content: `${
-												player.user.globalName ??
-												player.user.username
+												player.name
 											} played a **${
 												new_card_chosen.front.text
 											}** on dish ${
@@ -685,8 +686,7 @@ module.exports = {
 
 										await uno_players.game_channel.send({
 											content: `${
-												player.user.globalName ??
-												player.user.username
+												player.name
 											} played a **${
 												player.hand[0].text
 											}** on dish ${
@@ -745,7 +745,7 @@ module.exports = {
 						player.popcorn--;
 						await game_channel.send(
 							`*${
-								player.user
+								player.name
 							} consumes a bucket of popcorn...* (${
 								player.popcorn >= 1
 									? `🍿`.repeat(player.popcorn)
@@ -760,9 +760,9 @@ module.exports = {
 					player.win_by_match = true;
 				}
 				await game_channel.send({
-					content: `${
-						player.user.globalName ?? player.user.username
-					} played a **${card_chosen.text}** on dish ${
+					content: `${player.name} played a **${
+						card_chosen.text
+					}** on dish ${
 						drawpile.discardpiles.indexOf(pile_chosen) + 1
 					}.`,
 				});

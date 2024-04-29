@@ -124,8 +124,6 @@ class CardFace {
 		const possible_flex_color_array = color_keys
 			.toSpliced(color_keys.indexOf(color), 1)
 			.toSpliced(-1);
-		this.flex = flex;
-		/*
 		this.flex =
 			this.color == `w`
 				? false
@@ -138,7 +136,6 @@ class CardFace {
 						)
 				  ]
 				: false;
-				*/
 		this.wild_colors =
 			this.color == `w`
 				? shuffleArray(color_keys.filter((c) => c != `w`)).slice(6)
@@ -411,9 +408,9 @@ class DrawPile extends Array {
 		super();
 		this.currently_inactive_discard_pile = 0;
 		this.discardpiles = [];
-		this.activate_all_discard_piles();
+		this.update_discard_piles();
 	}
-	activate_all_discard_piles() {
+	update_discard_piles() {
 		this.discardpiles.forEach((dp) => {
 			dp.active = true;
 			if (dp.top_card.icon == `stop`) {
@@ -422,7 +419,11 @@ class DrawPile extends Array {
 		});
 		return this;
 	}
-	set_inactive_discard_pile(index) {
+	activate_discard_pile(index) {
+		this.discardpiles[index].active = true;
+		return this;
+	}
+	deactivate_discard_pile(index) {
 		this.discardpiles[index].active = false;
 		return this;
 	}
@@ -430,7 +431,7 @@ class DrawPile extends Array {
 		this.activate_all_discard_piles();
 		const dont_deactivate = true;
 		if (!dont_deactivate) {
-			this.set_inactive_discard_pile(index);
+			this.deactivate_discard_pile(index);
 		}
 
 		return this;
@@ -605,10 +606,25 @@ class PlayerManager extends Array {
 		this.input_state = false;
 		this.winners_list = [];
 		this.losers_list = [];
-		this.attack_counter = 1;
+		this.attack_counter = 0;
 		this.effect_list = [];
 		this.popcorn_users = [];
 		this.draw_check = 0;
+		this.draw_stack_pile_index = undefined;
+	}
+	/**
+	 * Update draw piles.
+	 */
+	async update_discard_piles() {
+		this.drawpile.update_discard_piles();
+		if (this.draw_stack <= 0) {
+			this.draw_stack_pile_index = undefined;
+			return this;
+		}
+		if (this.draw_stack_pile_index != undefined) {
+			this.drawpile.discardpiles.forEach((dp) => (dp.active = false));
+			this.drawpile.activate_discard_pile(this.draw_stack_pile_index);
+		}
 	}
 	/**
 	 * Dials up the oven (Attack d10).
@@ -764,8 +780,11 @@ class PlayerManager extends Array {
 		return this;
 	}
 	add_winner(id) {
-		this.winners_list.push(this.find_player(id));
-		this.remove_player(id);
+		this.forEach((p) => {
+			if (p.user.id != id) {
+				this.add_loser(p.user.id);
+			}
+		});
 	}
 	add_loser(id) {
 		this.losers_list.push(this.find_player(id));

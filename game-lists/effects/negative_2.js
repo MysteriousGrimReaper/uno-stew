@@ -20,7 +20,7 @@ module.exports = {
 		}
 		await discarder.draw(uno_players.drawpile, 2);
 		await uno_players.game_channel.send(
-			`${discarder.user} replaced two random cards!`
+			`${discarder.name} replaced two random cards!`
 		);
 	},
 };
