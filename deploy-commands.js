@@ -30,7 +30,7 @@ const rest = new REST({ version: "10" }).setToken(token);
 		);
 
 		// The put method is used to fully refresh all commands in the guild with the current set
-		/*rest.put(Routes.applicationCommands(clientId), { body: [] })
+		/* rest.put(Routes.applicationCommands(clientId), { body: [] })
             .then(() => console.log('Successfully deleted all application commands.'))
             .catch(console.error);
         rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: [] })

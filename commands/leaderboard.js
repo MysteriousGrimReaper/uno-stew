@@ -13,7 +13,6 @@ module.exports = {
 		.setDescription("Shows how many wins each player has."),
 	async execute(interaction) {
 		const ldb = await db.all();
-		console.log(await db.all());
 		ldb.sort((a, b) => a.value.wins - b.value.wins);
 		const ldb_embed = new EmbedBuilder()
 			.setTitle(`Chocolate Leaderboard`)

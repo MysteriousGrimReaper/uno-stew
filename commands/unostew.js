@@ -79,7 +79,6 @@ module.exports = {
 		currently_playing_channels.push(interaction.channel.id);
 		const game_channel = interaction.channel;
 		const league = interaction.options.getBoolean(`league`);
-		console.log(league);
 		const player_list = await create_signup({
 			interaction,
 			game_name: league ? "Uno League" : "Uno Stew",
@@ -160,37 +159,16 @@ module.exports = {
 						break;
 					case `unostew_table`:
 						await i.reply({
-							embeds: [drawpile.table_embed],
+							embeds: [
+								uno_players.oven_embed,
+								drawpile.table_embed,
+							],
 							ephemeral: true,
 						});
 						break;
 					case `unostew_players`:
 						await i.reply({
-							content: `Current player: ${
-								uno_players.current_player.name
-							}\nHere are the hands and statuses of all players:\n${uno_players
-								.map(
-									(p) =>
-										`## ${p.name} ${`🍕`.repeat(
-											p.pizza
-										)}${`🍿`.repeat(p.popcorn)}\n${
-											p.hand.back_text
-										}`
-								)
-								.join(
-									`\n`
-								)}\nThe turn order is as follows:\n ${uno_players
-								.map(
-									(p, ci) =>
-										(uno_players.current_turn_index == ci
-											? `**`
-											: ``) +
-										p.name +
-										(uno_players.current_turn_index == ci
-											? `**`
-											: ``)
-								)
-								.join(`, `)}.`,
+							embeds: [uno_players.player_embed],
 							ephemeral: true,
 						});
 				}
@@ -340,7 +318,7 @@ module.exports = {
 				// end of turn function
 				async function end_turn() {
 					uno_players.update_discard_piles();
-					uno_players.forEach(async (p) => {
+					await uno_players.forEach(async (p) => {
 						if (p.hand.length >= 25) {
 							await game_channel.send(
 								`${p.user} has perished to the stew... (25 or more cards)`
@@ -357,37 +335,19 @@ module.exports = {
 								uno_players.add_loser(`${p.user.id}`);
 							}
 							// console.log(uno_players);
-						}
-						if (p.win_by_match) {
+						} else if (p.win_by_match) {
 							await game_channel.send(
 								`${p.user} has escaped the kitchen! (All piles match in color or symbol)`
 							);
 							uno_players.add_winner(`${p.user.id}`);
 						}
 					});
-
+					console.log(uno_players.length);
 					/* currently_inactive_discard_pile =
 						Math.max(1, Math.ceil(Math.random() * 4)) - 1;
 					drawpile.set_new_inactive_discard_pile(
 						currently_inactive_discard_pile
 					);*/
-
-					if (uno_players.winners_list.length > 0) {
-						await game_channel.send(
-							`## Congratulations to ${uno_players.winners_list[0].user} for winning!\nHave some chocolate! :chocolate_bar:`
-						);
-						await db.set(
-							`${uno_players.winners_list[0].user.id}.name`,
-							uno_players.winners_list[0].name
-						);
-						await db.add(
-							`${uno_players.winners_list[0].user.id}.wins`,
-							1
-						);
-						message_collector.stop();
-						hand_collect_reply_fn = null;
-						return;
-					}
 					if (uno_players.length == 1) {
 						await game_channel.send(
 							`## Congratulations to ${uno_players[0].user} for winning!\nHave some chocolate! :chocolate_bar:`
@@ -396,10 +356,7 @@ module.exports = {
 							`${uno_players[0].user}.name`,
 							uno_players[0].name
 						);
-						await db.add(
-							`${uno_players.winners_list[0].user.id}.wins`,
-							1
-						);
+						await db.add(`${uno_players[0].user.id}.wins`, 1);
 						message_collector.stop();
 						hand_collect_reply_fn = null;
 						return;
@@ -420,10 +377,6 @@ module.exports = {
 						embeds: [uno_players.current_player.init_hand_embed],
 					});
 				}
-				/*
-				console.log(`message: ${message.content}`);
-				console.log(`author: ${message.author.username}`);
-				*/
 				// debug commands
 				if (debug_ids.includes(message.author.id)) {
 					// debug command, type "# debug remove" to use

@@ -604,13 +604,47 @@ class PlayerManager extends Array {
 		this.play_direction = 1;
 		this.draw_stack = 0;
 		this.input_state = false;
-		this.winners_list = [];
 		this.losers_list = [];
 		this.attack_counter = 0;
 		this.effect_list = [];
 		this.popcorn_users = [];
 		this.draw_check = 0;
 		this.draw_stack_pile_index = undefined;
+	}
+	get oven_embed() {
+		return new EmbedBuilder()
+			.setTitle(`Oven`)
+			.setDescription(
+				`🔥`.repeat(this.attack_counter) +
+					`▪️`.repeat(10 - this.attack_counter)
+			);
+	}
+	get player_embed() {
+		const p_embed = new EmbedBuilder()
+			.setTitle(`Current player: ${this[this.current_turn_index].name}`)
+			.setDescription(
+				`Player with fewest cards: ${
+					this.toSorted((a, b) => a.hand.length - b.hand.length)[0]
+						.name
+				}`
+			)
+			.setThumbnail(
+				this.toSorted(
+					(a, b) => a.hand.length - b.hand.length
+				)[0].user.avatarURL()
+			)
+			.addFields(
+				...this.map((player) => {
+					return {
+						name: `${player.name} ${`🍕`.repeat(
+							player.pizza
+						)} ${`🍿`.repeat(player.popcorn)}`,
+						value: player.hand.back_text,
+					};
+				})
+			)
+			.setFooter({ text: `Turn order: ${this.names.join(` | `)}` });
+		return p_embed;
 	}
 	/**
 	 * Update draw piles.
@@ -669,6 +703,9 @@ class PlayerManager extends Array {
 	}
 	get current_player() {
 		return this[this.current_turn_index];
+	}
+	get names() {
+		return this.map((p) => p.name);
 	}
 	load(player_list, interaction) {
 		this.push(
@@ -746,7 +783,6 @@ class PlayerManager extends Array {
 	 */
 	find_player(id) {
 		const index = this.id_map.indexOf(id);
-		console.log(this[index]);
 		return this[index];
 	}
 	/**
@@ -770,7 +806,6 @@ class PlayerManager extends Array {
 	 * @param {String} id The user ID.
 	 */
 	remove_player(id) {
-		console.log(this.id_map);
 		if (this.id_map.indexOf(id) < 0) {
 			console.log(`Could not find user with id ${id}`);
 			return;
@@ -785,10 +820,12 @@ class PlayerManager extends Array {
 				this.add_loser(p.user.id);
 			}
 		});
+		return this;
 	}
 	add_loser(id) {
 		this.losers_list.push(this.find_player(id));
 		this.remove_player(id);
+		return this;
 	}
 	/**
 	 * Remove the current player.
