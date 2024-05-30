@@ -19,6 +19,9 @@ const small_effects_path = path.join(stew_path, `/effects`);
 const effect_folder = fs.readdirSync(effects_path);
 const effect_list = [];
 for (const effect_file of effect_folder) {
+	if (!effect_file.endsWith(`.js`)) {
+		continue
+	}
 	const filePath = path.join(small_effects_path, effect_file);
 	const effect = require(filePath);
 	effect_list.push(effect);
