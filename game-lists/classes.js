@@ -407,7 +407,8 @@ class DrawPile extends Array {
 	constructor() {
 		super();
 		this.currently_inactive_discard_pile = 0;
-		this.discardpiles = [];
+
+		this.discardpiles = [new DiscardPile(), new DiscardPile(), new DiscardPile(), new DiscardPile()];
 		this.update_discard_piles();
 	}
 	update_discard_piles() {

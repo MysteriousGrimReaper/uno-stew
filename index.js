@@ -27,6 +27,9 @@ const filesPath = path.join(__dirname, "commands");
 const commandFiles = fs.readdirSync(filesPath);
 
 for (const file of commandFiles) {
+	if (!file.endsWith(".js")) {
+		continue;
+	}
 	const command = require(path.join(filesPath, file));
 	if ("data" in command && "execute" in command) {
 		client.commands.set(command.data.name, command);

@@ -107,14 +107,6 @@ module.exports = {
 			);
 			const drawpile = new DrawPile().load(deck);
 			const wild_drawpile = new DrawPile();
-			const discardpile_1 = new DiscardPile();
-			const discardpile_2 = new DiscardPile();
-			const discardpile_3 = new DiscardPile();
-			const discardpile_4 = new DiscardPile();
-			drawpile.addDiscardPile(discardpile_1);
-			drawpile.addDiscardPile(discardpile_2);
-			drawpile.addDiscardPile(discardpile_3);
-			drawpile.addDiscardPile(discardpile_4);
 
 			const uno_players = new PlayerManager()
 				.load(player_list, interaction)

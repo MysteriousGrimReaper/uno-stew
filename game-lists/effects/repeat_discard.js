@@ -35,7 +35,7 @@ module.exports = {
 					ephemeral: true,
 					content: `${
 						find_same_color.length > 0
-							? `${find_same_color.text}`
+							? `${find_same_color.text()}`
 							: `You have no playable cards left in your hand, type \`stop\` to exit.`
 					}`,
 				});
