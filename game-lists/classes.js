@@ -786,6 +786,9 @@ class PlayerManager extends Array {
 		const index = this.id_map.indexOf(id);
 		return this[index];
 	}
+	parse_user(message) {
+		return this.find(p => p.user.id == message.mentions.parsedUsers.first().id) ?? this.find_player_by_name(message.content) ?? this.find_player(message.content)
+	}
 	/**
 	 * Find a player based on their name.
 	 * @param {String} name The username/globalName.
