@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const effects_path = path.join(`../game-lists/`, `effects/`);
+const effects_path = path.join(__dirname, `../game-lists/effects/`);
 const uno_effects_path = `../uno-stew/game-lists/effects/`;
 const icon_map = new Map();
 
